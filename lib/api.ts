@@ -10,6 +10,9 @@ class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
+    console.log("[v0] Making API request to:", url)
+    console.log("[v0] Request options:", { method: options.method || "GET", headers: options.headers })
+
     // Get token from localStorage
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
 
@@ -23,16 +26,37 @@ class ApiClient {
     }
 
     try {
+      console.log("[v0] Sending fetch request...")
       const response = await fetch(url, config)
-      const data = await response.json()
+      console.log("[v0] Response status:", response.status)
+      console.log("[v0] Response ok:", response.ok)
+
+      let data
+      try {
+        data = await response.json()
+        console.log("[v0] Response data:", data)
+      } catch (jsonError) {
+        console.error("[v0] Failed to parse JSON response:", jsonError)
+        throw new Error(`Server returned non-JSON response. Status: ${response.status}`)
+      }
 
       if (!response.ok) {
+        console.error("[v0] API error response:", data)
         throw new Error(data.message || `HTTP error! status: ${response.status}`)
       }
 
       return data
     } catch (error) {
-      console.error("API request failed:", error)
+      console.error("[v0] API request failed:")
+      console.error("[v0] URL:", url)
+      console.error("[v0] Error:", error)
+
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          `Network error: Unable to connect to ${this.baseURL}. Please check if the server is running and accessible.`,
+        )
+      }
+
       throw error
     }
   }
