@@ -1,0 +1,278 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Eye, Download, Mail, Star, Users } from "lucide-react"
+import { CandidateDetailModal } from "./candidate-detail-modal"
+import { useToast } from "@/hooks/use-toast"
+
+interface Candidate {
+  id: number
+  name: string
+  email: string
+  cvUrl: string
+  score: number
+  strengths: string[]
+  weaknesses: string[]
+  evaluation: string
+  appliedAt: string
+}
+
+interface CandidatesListProps {
+  roleId: string
+}
+
+export function CandidatesList({ roleId }: CandidatesListProps) {
+  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    fetchCandidates()
+  }, [roleId])
+
+  const fetchCandidates = async () => {
+    try {
+      const response = await fetch(`/api/roles/${roleId}/candidates`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCandidates(data.candidates)
+      } else {
+        // Fallback to mock data for demo purposes
+        setTimeout(() => {
+          setCandidates([
+            {
+              id: 1,
+              name: "María García",
+              email: "maria.garcia@email.com",
+              cvUrl: "/cv/maria-garcia.pdf",
+              score: 85,
+              strengths: ["Experiencia sólida en React", "Conocimiento avanzado de TypeScript"],
+              weaknesses: ["Poca experiencia con testing", "Sin experiencia en Next.js"],
+              evaluation: "Candidata muy prometedora con excelente base técnica",
+              appliedAt: "2024-01-20",
+            },
+            {
+              id: 2,
+              name: "Juan Pérez",
+              email: "juan.perez@email.com",
+              cvUrl: "/cv/juan-perez.pdf",
+              score: 72,
+              strengths: ["Experiencia en metodologías ágiles", "Buen conocimiento de CSS"],
+              weaknesses: ["Experiencia limitada con React", "Falta de proyectos recientes"],
+              evaluation: "Candidato con potencial que necesita actualización técnica",
+              appliedAt: "2024-01-19",
+            },
+            {
+              id: 3,
+              name: "Ana López",
+              email: "ana.lopez@email.com",
+              cvUrl: "/cv/ana-lopez.pdf",
+              score: 91,
+              strengths: ["Experiencia completa en stack moderno", "Liderazgo técnico demostrado"],
+              weaknesses: ["Expectativas salariales altas", "Disponibilidad limitada"],
+              evaluation: "Candidata excepcional, altamente recomendada",
+              appliedAt: "2024-01-18",
+            },
+          ])
+        }, 1000)
+      }
+    } catch (error) {
+      console.error("Error fetching candidates:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los candidatos",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getScoreBadge = (score: number) => {
+    if (score >= 80) return <Badge className="bg-green-500 hover:bg-green-600">Excelente</Badge>
+    if (score >= 60) return <Badge variant="default">Bueno</Badge>
+    if (score >= 40) return <Badge variant="secondary">Regular</Badge>
+    return <Badge variant="destructive">Bajo</Badge>
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+  }
+
+  const handleViewDetails = (candidateId: number) => {
+    setSelectedCandidateId(candidateId)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedCandidateId(null)
+  }
+
+  const handleDownloadCV = async (cvUrl: string, candidateName: string) => {
+    try {
+      const response = await fetch(cvUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `CV_${candidateName.replace(/\s+/g, "_")}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Descarga iniciada",
+        description: `CV de ${candidateName} descargado exitosamente`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo descargar el CV",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-muted rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/3"></div>
+                </div>
+                <div className="h-6 bg-muted rounded w-16"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (candidates.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+            <Users className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No hay candidatos aún</h3>
+          <p className="text-muted-foreground mb-4">Sube el primer CV para comenzar a evaluar candidatos</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      <div className="space-y-4">
+        {candidates
+          .sort((a, b) => b.score - a.score)
+          .map((candidate) => (
+            <Card key={candidate.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        {getInitials(candidate.name)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-semibold text-lg">{candidate.name}</h3>
+                        {getScoreBadge(candidate.score)}
+                      </div>
+
+                      <p className="text-muted-foreground text-sm mb-2">{candidate.email}</p>
+
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center">
+                          <Star className="mr-1 h-4 w-4 fill-current text-yellow-500" />
+                          {candidate.score}/100
+                        </div>
+                        <span>Aplicó: {new Date(candidate.appliedAt).toLocaleDateString()}</span>
+                      </div>
+
+                      <p className="text-sm text-muted-foreground mb-3 italic">"{candidate.evaluation}"</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <h4 className="font-medium text-green-700 mb-1">Fortalezas:</h4>
+                          <ul className="text-muted-foreground space-y-1">
+                            {candidate.strengths.map((strength, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-green-500 mr-1">•</span>
+                                {strength}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h4 className="font-medium text-orange-700 mb-1">Áreas de mejora:</h4>
+                          <ul className="text-muted-foreground space-y-1">
+                            {candidate.weaknesses.map((weakness, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-orange-500 mr-1">•</span>
+                                {weakness}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-transparent"
+                      onClick={() => handleViewDetails(candidate.id)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver Detalles
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDownloadCV(candidate.cvUrl, candidate.name)}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Descargar CV
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Contactar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+      </div>
+
+      <CandidateDetailModal candidateId={selectedCandidateId} isOpen={isModalOpen} onClose={handleCloseModal} />
+    </>
+  )
+}
