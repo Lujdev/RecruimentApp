@@ -21,7 +21,9 @@ export function DashboardSidebar() {
   const pathname = usePathname()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("refresh_token")
+    localStorage.removeItem("user")
     window.location.href = "/auth/login"
   }
 

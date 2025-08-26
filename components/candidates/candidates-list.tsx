@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Eye, Download, Mail, Star, Users } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
+import { apiClient } from "@/lib/api"
 
 interface Candidate {
   id: number
@@ -38,54 +39,25 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
 
   const fetchCandidates = async () => {
     try {
-      const response = await fetch(`/api/roles/${roleId}/candidates`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setCandidates(data.candidates)
+      setIsLoading(true)
+      const response = await apiClient.getRoleCandidates(roleId)
+      
+      if (response.candidates) {
+        // Transform API response to match component interface
+        const transformedCandidates: Candidate[] = response.candidates.map(candidate => ({
+          id: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          cvUrl: candidate.cvUrl,
+          score: candidate.score,
+          strengths: Array.isArray(candidate.strengths) ? candidate.strengths : [candidate.strengths[0], candidate.strengths[1]],
+          weaknesses: Array.isArray(candidate.weaknesses) ? candidate.weaknesses : [candidate.weaknesses[0], candidate.weaknesses[1]],
+          evaluation: candidate.evaluation,
+          appliedAt: candidate.appliedAt
+        }))
+        setCandidates(transformedCandidates)
       } else {
-        // Fallback to mock data for demo purposes
-        setTimeout(() => {
-          setCandidates([
-            {
-              id: 1,
-              name: "María García",
-              email: "maria.garcia@email.com",
-              cvUrl: "/cv/maria-garcia.pdf",
-              score: 85,
-              strengths: ["Experiencia sólida en React", "Conocimiento avanzado de TypeScript"],
-              weaknesses: ["Poca experiencia con testing", "Sin experiencia en Next.js"],
-              evaluation: "Candidata muy prometedora con excelente base técnica",
-              appliedAt: "2024-01-20",
-            },
-            {
-              id: 2,
-              name: "Juan Pérez",
-              email: "juan.perez@email.com",
-              cvUrl: "/cv/juan-perez.pdf",
-              score: 72,
-              strengths: ["Experiencia en metodologías ágiles", "Buen conocimiento de CSS"],
-              weaknesses: ["Experiencia limitada con React", "Falta de proyectos recientes"],
-              evaluation: "Candidato con potencial que necesita actualización técnica",
-              appliedAt: "2024-01-19",
-            },
-            {
-              id: 3,
-              name: "Ana López",
-              email: "ana.lopez@email.com",
-              cvUrl: "/cv/ana-lopez.pdf",
-              score: 91,
-              strengths: ["Experiencia completa en stack moderno", "Liderazgo técnico demostrado"],
-              weaknesses: ["Expectativas salariales altas", "Disponibilidad limitada"],
-              evaluation: "Candidata excepcional, altamente recomendada",
-              appliedAt: "2024-01-18",
-            },
-          ])
-        }, 1000)
+        setCandidates([])
       }
     } catch (error) {
       console.error("Error fetching candidates:", error)
@@ -94,6 +66,9 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
         description: "No se pudieron cargar los candidatos",
         variant: "destructive",
       })
+      
+      // Fallback to empty array on error
+      setCandidates([])
     } finally {
       setIsLoading(false)
     }

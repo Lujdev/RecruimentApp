@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 import { Users, FileText, Star, Award } from "lucide-react"
+import { apiClient } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface AnalyticsData {
   totalCandidates: number
@@ -34,6 +36,7 @@ interface AnalyticsData {
 export function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchAnalytics()
@@ -41,7 +44,45 @@ export function AnalyticsDashboard() {
 
   const fetchAnalytics = async () => {
     try {
-      // Simulated data - in real app would fetch from API
+      setLoading(true)
+      const response = await apiClient.getDashboardAnalytics()
+      
+      if (response.success) {
+        // Transform API response to match component interface
+        const transformedData: AnalyticsData = {
+          totalCandidates: response.data.totalCandidates,
+          totalRoles: response.data.totalRoles,
+          averageScore: response.data.averageScore,
+          topCandidates: response.data.topCandidates.map(candidate => ({
+            name: candidate.name,
+            score: candidate.score,
+            role: candidate.role_title
+          })),
+          scoreDistribution: response.data.scoreDistribution.map(item => ({
+            range: item.score_range,
+            count: item.count
+          })),
+          roleStats: response.data.roleStats.map(role => ({
+            role: role.title,
+            candidates: role.applicationsCount,
+            avgScore: role.avgScore
+          })),
+          weeklyApplications: response.data.weeklyApplications.map(week => ({
+            week: week.week,
+            applications: week.count
+          }))
+        }
+        setAnalytics(transformedData)
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los datos de análisis",
+        variant: "destructive",
+      })
+      
+      // Fallback to mock data on error
       const mockData: AnalyticsData = {
         totalCandidates: 127,
         totalRoles: 8,
@@ -75,13 +116,8 @@ export function AnalyticsDashboard() {
           { week: "Sem 5", applications: 30 },
         ],
       }
-
-      setTimeout(() => {
-        setAnalytics(mockData)
-        setLoading(false)
-      }, 1000)
-    } catch (error) {
-      console.error("Error fetching analytics:", error)
+      setAnalytics(mockData)
+    } finally {
       setLoading(false)
     }
   }

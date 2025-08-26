@@ -32,7 +32,7 @@ export default function ComparisonPage() {
 
   const fetchCandidates = async () => {
     try {
-      // Simulated data - in real app would fetch from API
+      // Mock data - API pendiente de implementar (ver BACKEND_PENDIENTES.md)
       const mockCandidates: Candidate[] = [
         {
           id: 1,
