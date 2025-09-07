@@ -88,6 +88,7 @@ export function AllCandidatesList() {
   }
 
   const getInitials = (name: string) => {
+    if (!name) return "??"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -168,7 +169,7 @@ export function AllCandidatesList() {
                     <p className="text-sm text-muted-foreground">{candidate.candidateEmail}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {candidate.evaluation && getScoreBadge(candidate.evaluation.score)}
+                    {getScoreBadge(candidate.evaluation.score)}
                     {getStatusBadge(candidate.status)}
                   </div>
                 </div>
@@ -190,19 +191,6 @@ export function AllCandidatesList() {
                         day: 'numeric'
                       })}
                     </span>
-                    {candidate.evaluation && (
-                      <>
-                        <span className="mx-2">•</span>
-                        <span className="font-medium">Evaluado:</span>
-                        <span className="ml-2">
-                          {new Date(candidate.evaluation.evaluatedAt).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </>
-                    )}
                   </div>
                 </div>
                 
@@ -242,17 +230,7 @@ export function AllCandidatesList() {
 
       {selectedCandidate && (
         <CandidateDetailModal
-          candidate={{
-            id: parseInt(selectedCandidate.id),
-            name: selectedCandidate.candidateName,
-            email: selectedCandidate.candidateEmail,
-            cvUrl: selectedCandidate.cvUrl,
-            score: selectedCandidate.evaluation?.score || 0,
-            strengths: [],
-            weaknesses: [],
-            evaluation: "",
-            appliedAt: selectedCandidate.appliedAt
-          }}
+          candidateId={selectedCandidate.id}
           isOpen={!!selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
         />

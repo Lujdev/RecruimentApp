@@ -45,8 +45,8 @@ export function RegisterForm() {
       const response = await apiClient.register({
         email: formData.email,
         password: formData.password,
-        name: formData.name,
-        company: formData.company,
+        fullName: formData.name,
+        companyName: formData.company,
       })
 
       if (response.message) {

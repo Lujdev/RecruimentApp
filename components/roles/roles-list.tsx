@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface Role {
   id: string
@@ -57,6 +58,7 @@ const formatCreatedDate = (dateString: string): string => {
 };
 
 export function RolesList() {
+  const { state } = useAppContext()
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
@@ -64,6 +66,13 @@ export function RolesList() {
   useEffect(() => {
     fetchRoles()
   }, [])
+
+  // Listen for refresh triggers from context
+  useEffect(() => {
+    if (state.refreshTrigger > 0) {
+      fetchRoles()
+    }
+  }, [state.refreshTrigger])
 
   const fetchRoles = async () => {
     try {
@@ -88,11 +97,11 @@ export function RolesList() {
             title: role.title,
             description: role.description,
             requirements: role.requirements,
-            candidatesCount: role.applicationCount || 0,
-            createdAt: role.createdAt,
+            candidatesCount: parseInt(role.applications_count) || 0,
+            createdAt: role.created_at,
             status: role.status as "active" | "paused" | "closed",
             department: role.department,
-            employmentType: role.employmentType,
+            employmentType: role.employment_type,
             location: role.location
           }
         })

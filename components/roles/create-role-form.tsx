@@ -11,12 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface CreateRoleFormProps {
   onSuccess: () => void
 }
 
 export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
+  const { notifyRoleCreated } = useAppContext()
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -60,6 +62,8 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
       })
 
       if (response.message) {
+        // Notify context that a role was created
+        notifyRoleCreated(response.role?.id || 'new-role')
         onSuccess()
         // Reset form
         setFormData({

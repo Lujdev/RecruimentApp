@@ -196,19 +196,23 @@ class ApiClient {
         requirements: string
         department: string
         location: string
-        employmentType: string
-        salaryRange: string
+        employment_type: string
+        salary_range: string
         status: string
-        createdAt: string
-        createdBy: string
-        creatorName: string
-        applicationCount: number
+        created_at: string
+        created_by: string
+        creator_name: string
+        creator_company: string
+        applications_count: string
+        updated_at: string
       }>
       pagination: {
-        currentPage: number
+        page: number
+        limit: number
+        total: number
         totalPages: number
-        totalItems: number
-        itemsPerPage: number
+        hasNext: boolean
+        hasPrev: boolean
       }
     }>(`/api/roles${queryString}`)
   }
@@ -333,16 +337,25 @@ class ApiClient {
   async getRoleCandidates(roleId: string) {
     return this.request<{
       candidates: Array<{
-        id: number
+        id: string
         name: string
         email: string
         cvUrl: string
         score: number
-        strengths: [string, string]
-        weaknesses: [string, string]
+        strengths: string[]
+        weaknesses: string[]
         evaluation: string
-        appliedAt: string
+        evaluation_date: string
+        status: string
       }>
+      pagination: {
+        page: number
+        limit: number
+        total: number
+        totalPages: number
+        hasNext: boolean
+        hasPrev: boolean
+      }
     }>(`/api/roles/${roleId}/candidates`)
   }
 
@@ -367,17 +380,21 @@ class ApiClient {
 
   async getCandidate(candidateId: string) {
     return this.request<{
-      candidate: {
-        id: number
+      success: boolean
+      data: {
+        id: string
         name: string
         email: string
-        cvUrl: string
-        score: number
-        strengths: [string, string]
-        weaknesses: [string, string]
-        evaluation: string
-        roleTitle: string
-        appliedAt: string
+        phone: string | null
+        cvFilePath: string
+        status: string
+        evaluation: {
+          score: number
+          strengths: string[]
+          weaknesses: string[]
+          summary: string
+          evaluationDate: string // ISO format
+        }
       }
     }>(`/api/candidates/${candidateId}`)
   }
@@ -793,30 +810,31 @@ class ApiClient {
     const queryString = params.toString() ? `?${params.toString()}` : ''
     
     return this.request<{
-      candidates: Array<{
+      applications: Array<{
         id: string
-        name: string
-        email: string
-        phone?: string
+        job_role_id: string
+        candidate_name: string
+        candidate_email: string
+        candidate_phone: string
+        cv_file_path: string
+        cv_text: string
         status: string
-        appliedAt: string
-        cvUrl: string
-        jobRole: {
-          id: string
-          title: string
-          department: string
-        }
-        evaluation?: {
-          id: string
-          score: number
-          evaluatedAt: string
-        }
+        applied_at: string
+        updated_at: string
+        job_title: string
+        department: string
+        score: number
+        strengths: string[]
+        weaknesses: string[]
+        evaluation_summary: string
       }>
       pagination: {
-        currentPage: number
+        page: number
+        limit: number
+        total: number
         totalPages: number
-        totalItems: number
-        itemsPerPage: number
+        hasNext: boolean
+        hasPrev: boolean
       }
     }>(`/api/candidates${queryString}`)
   }
