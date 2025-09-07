@@ -1,35 +1,66 @@
 "use client"
 
 import type React from "react"
+import "react-quill-new/dist/quill.snow.css"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
+import dynamic from "next/dynamic"
+
+interface Role {
+  id: string
+  title: string
+  description: string
+  requirements: string
+  department?: string
+  location?: string
+  employmentType?: string
+  salaryRange?: string
+}
 
 interface CreateRoleFormProps {
   onSuccess: () => void
+  role: Role | null
 }
 
-export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
+export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
+  const { notifyRoleCreated } = useAppContext()
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
-    requirements: "",
     department: "",
     location: "",
     employmentType: "",
     salaryRange: "",
   })
+  const [description, setDescription] = useState("")
+  const [requirements, setRequirements] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const ReactQuill = useMemo(() => dynamic(() => import('react-quill-new'), { ssr: false }), []);
+
+  useEffect(() => {
+    if (role) {
+      setFormData({
+        title: role.title,
+        department: role.department || "",
+        location: role.location || "",
+        employmentType: role.employmentType || "",
+        salaryRange: role.salaryRange || "",
+      })
+      setDescription(role.description)
+      setRequirements(role.requirements)
+    }
+  }, [role])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -48,30 +79,39 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
     setIsLoading(true)
     setError("")
 
-    try {
-      const response = await apiClient.createRole({
-        title: formData.title,
-        description: formData.description,
-        requirements: formData.requirements,
-        department: formData.department,
-        location: formData.location,
-        employmentType: formData.employmentType,
-        salaryRange: formData.salaryRange || undefined,
-      })
+    const roleData = {
+      title: formData.title,
+      description: description,
+      requirements: requirements,
+      department: formData.department,
+      location: formData.location,
+      employmentType: formData.employmentType,
+      salaryRange: formData.salaryRange || undefined,
+    }
 
-      if (response.message) {
-        onSuccess()
-        // Reset form
-        setFormData({
-          title: "",
-          description: "",
-          requirements: "",
-          department: "",
-          location: "",
-          employmentType: "",
-          salaryRange: "",
-        })
+    try {
+      if (role) {
+        const response = await apiClient.updateRole(role.id, roleData)
+        if (response.message) {
+          onSuccess()
+        }
+      } else {
+        const response = await apiClient.createRole(roleData)
+        if (response.message) {
+          notifyRoleCreated(response.role?.id || 'new-role')
+          onSuccess()
+        }
       }
+      // Reset form
+      setFormData({
+        title: "",
+        department: "",
+        location: "",
+        employmentType: "",
+        salaryRange: "",
+      })
+      setDescription("")
+      setRequirements("")
     } catch (error: any) {
       setError(error.message || "Error de conexión. Intenta nuevamente.")
     } finally {
@@ -80,7 +120,7 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto max-h-[80vh] p-4">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -102,7 +142,7 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="department">Departamento</Label>
-          <Select onValueChange={(value) => handleSelectChange("department", value)} required>
+          <Select onValueChange={(value) => handleSelectChange("department", value)} value={formData.department} required>
             <SelectTrigger>
               <SelectValue placeholder="Selecciona departamento" />
             </SelectTrigger>
@@ -121,7 +161,7 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="employmentType">Tipo de Empleo</Label>
-          <Select onValueChange={(value) => handleSelectChange("employmentType", value)} required>
+          <Select onValueChange={(value) => handleSelectChange("employmentType", value)} value={formData.employmentType} required>
             <SelectTrigger>
               <SelectValue placeholder="Selecciona tipo" />
             </SelectTrigger>
@@ -153,7 +193,8 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
           <Input
             id="salaryRange"
             name="salaryRange"
-            placeholder="ej. 40.000€ - 55.000€"
+            type="number"
+            placeholder="ej. 40000"
             value={formData.salaryRange}
             onChange={handleChange}
           />
@@ -162,27 +203,23 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="description">Descripción</Label>
-        <Textarea
+        <ReactQuill
           id="description"
-          name="description"
+          value={description}
+          onChange={setDescription}
           placeholder="Describe las responsabilidades y el perfil ideal..."
-          rows={4}
-          value={formData.description}
-          onChange={handleChange}
-          required
+          className="bg-white dark:bg-gray-900"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="requirements">Requisitos</Label>
-        <Textarea
+        <ReactQuill
           id="requirements"
-          name="requirements"
+          value={requirements}
+          onChange={setRequirements}
           placeholder="Lista los requisitos técnicos y de experiencia..."
-          rows={3}
-          value={formData.requirements}
-          onChange={handleChange}
-          required
+          className="bg-white dark:bg-gray-900"
         />
       </div>
 
@@ -192,7 +229,7 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Crear Rol
+          {role ? "Guardar Cambios" : "Crear Rol"}
         </Button>
       </div>
     </form>

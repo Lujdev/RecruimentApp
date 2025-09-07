@@ -6,23 +6,27 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { CheckCircle, AlertCircle, FileText, Mail, Calendar, Star } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, toast } from "@/hooks/use-toast"
+import { apiClient } from "@/lib/api"
 
 interface Candidate {
-  id: number
+  id: string
   name: string
   email: string
-  cvUrl: string
-  score: number
-  strengths: string[]
-  weaknesses: string[]
-  evaluation: string
-  roleTitle: string
-  appliedAt: string
+  phone: string | null
+  cvFilePath: string
+  status: string
+  evaluation: {
+    score: number
+    strengths: string[]
+    weaknesses: string[]
+    summary: string
+    evaluationDate: string
+  } | null
 }
 
 interface CandidateDetailModalProps {
-  candidateId: number | null
+  candidateId: string | null
   isOpen: boolean
   onClose: () => void
 }
@@ -43,18 +47,8 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
 
     setLoading(true)
     try {
-      const response = await fetch(`/api/candidates/${candidateId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error("Error al cargar detalles del candidato")
-      }
-
-      const data = await response.json()
-      setCandidate(data.candidate)
+      const response = await apiClient.getCandidate(candidateId)
+      setCandidate(response.data)
     } catch (error) {
       console.error("Error fetching candidate details:", error)
       toast({
@@ -78,6 +72,35 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
     return Array.from({ length: 5 }, (_, i) => (
       <Star key={i} className={`h-4 w-4 ${i < stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
     ))
+  }
+
+  const formatEvaluationDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const handleContactCandidate = (email: string, name: string) => {
+    const subject = encodeURIComponent(`Oportunidad laboral - ${name}`)
+    const body = encodeURIComponent(
+      `Estimado/a ${name},\n\n` +
+      `Esperamos que se encuentre bien. Nos complace informarle que hemos revisado su perfil y consideramos que podría ser un excelente candidato/a para una oportunidad en nuestra empresa.\n\n` +
+      `Nos gustaría programar una entrevista para conocer más sobre su experiencia y discutir cómo puede contribuir a nuestro equipo.\n\n` +
+      `Por favor, responda a este correo con su disponibilidad para los próximos días.\n\n` +
+      `Saludos cordiales,\n` +
+      `Equipo de Recursos Humanos`
+    )
+    
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank')
+    
+    toast({
+      title: "Email preparado",
+      description: `Se ha abierto su cliente de correo para contactar a ${name}`,
+    })
   }
 
   return (
@@ -110,80 +133,94 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
                   <Mail className="h-4 w-4" />
                   {candidate.email}
                 </p>
-                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                  <Calendar className="h-4 w-4" />
-                  Aplicó el {new Date(candidate.appliedAt).toLocaleDateString()}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Puesto: <span className="font-medium">{candidate.roleTitle}</span>
-                </p>
+                {candidate.evaluation && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                    <Calendar className="h-4 w-4" />
+                    Evaluado el {formatEvaluationDate(candidate.evaluation.evaluationDate)}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm text-muted-foreground">
+                    Estado: <Badge variant={candidate.status === 'pending' ? 'secondary' : 'default'}>
+                      {candidate.status === 'pending' ? 'Pendiente' : candidate.status}
+                    </Badge>
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Score */}
-            <div className="bg-muted/30 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Puntuación de Compatibilidad</h3>
-                <Badge className={`${getScoreColor(candidate.score)} border-0`}>{candidate.score}/100</Badge>
+            {candidate.evaluation && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold">Puntuación de Compatibilidad</h3>
+                  <Badge className={`${getScoreColor(candidate.evaluation.score)} border-0`}>{candidate.evaluation.score}/100</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex">{getScoreStars(candidate.evaluation.score)}</div>
+                  <span className="text-sm text-muted-foreground">
+                    ({candidate.evaluation.score >= 80 ? "Excelente" : candidate.evaluation.score >= 60 ? "Bueno" : "Regular"} compatibilidad)
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex">{getScoreStars(candidate.score)}</div>
-                <span className="text-sm text-muted-foreground">
-                  ({candidate.score >= 80 ? "Excelente" : candidate.score >= 60 ? "Bueno" : "Regular"} compatibilidad)
-                </span>
-              </div>
-            </div>
+            )}
 
             {/* Evaluation */}
-            {candidate.evaluation && (
+            {candidate.evaluation && candidate.evaluation.summary && (
               <div>
                 <h3 className="font-semibold mb-2">Evaluación General</h3>
                 <div className="bg-muted/50 rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground leading-relaxed">{candidate.evaluation}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{candidate.evaluation.summary}</p>
                 </div>
               </div>
             )}
 
             {/* Strengths and Weaknesses */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Fortalezas
-                </h3>
-                <div className="space-y-2">
-                  {candidate.strengths.map((strength, index) => (
-                    <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">{strength}</p>
-                    </div>
-                  ))}
+            {candidate.evaluation && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    Fortalezas
+                  </h3>
+                  <div className="space-y-2">
+                    {candidate.evaluation.strengths.map((strength, index) => (
+                      <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm text-green-800">{strength}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  Áreas de Mejora
-                </h3>
-                <div className="space-y-2">
-                  {candidate.weaknesses.map((weakness, index) => (
-                    <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <p className="text-sm text-orange-800">{weakness}</p>
-                    </div>
-                  ))}
+                <div>
+                  <h3 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    Áreas de Mejora
+                  </h3>
+                  <div className="space-y-2">
+                    {candidate.evaluation.weaknesses.map((weakness, index) => (
+                      <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <p className="text-sm text-orange-800">{weakness}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">
               <Button asChild className="flex-1">
-                <a href={candidate.cvUrl} target="_blank" rel="noopener noreferrer">
+                <a href={candidate.cvFilePath} target="_blank" rel="noopener noreferrer">
                   <FileText className="h-4 w-4 mr-2" />
                   Descargar CV
                 </a>
               </Button>
-              <Button variant="outline" className="flex-1 bg-transparent">
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-transparent"
+                onClick={() => handleContactCandidate(candidate.email, candidate.name)}
+              >
                 <Mail className="h-4 w-4 mr-2" />
                 Enviar Email
               </Button>

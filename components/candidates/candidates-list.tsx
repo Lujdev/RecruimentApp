@@ -8,9 +8,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Eye, Download, Mail, Star, Users } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
+import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface Candidate {
-  id: number
+  id: string
   name: string
   email: string
   cvUrl: string
@@ -19,6 +21,8 @@ interface Candidate {
   weaknesses: string[]
   evaluation: string
   appliedAt: string
+  evaluation_date: string
+  status: string
 }
 
 interface CandidatesListProps {
@@ -28,64 +32,43 @@ interface CandidatesListProps {
 export function CandidatesList({ roleId }: CandidatesListProps) {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null)
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { toast } = useToast()
+  const { state } = useAppContext()
 
   useEffect(() => {
     fetchCandidates()
   }, [roleId])
 
+  // Listen for context changes to refresh candidates
+  useEffect(() => {
+    fetchCandidates()
+  }, [state.refreshTrigger, state.lastCvUploaded])
+
   const fetchCandidates = async () => {
     try {
-      const response = await fetch(`/api/roles/${roleId}/candidates`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setCandidates(data.candidates)
+      setIsLoading(true)
+      const response = await apiClient.getRoleCandidates(roleId)
+      
+      if (response.candidates) {
+        // Transform API response to match component interface
+        const transformedCandidates: Candidate[] = response.candidates.map(candidate => ({
+          id: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          cvUrl: candidate.cvUrl,
+          score: candidate.score || 0,
+          strengths: Array.isArray(candidate.strengths) ? candidate.strengths : [],
+          weaknesses: Array.isArray(candidate.weaknesses) ? candidate.weaknesses : [],
+          evaluation: candidate.evaluation || '',
+          appliedAt: candidate.evaluation_date,
+          evaluation_date: candidate.evaluation_date,
+          status: candidate.status
+        }))
+        setCandidates(transformedCandidates)
       } else {
-        // Fallback to mock data for demo purposes
-        setTimeout(() => {
-          setCandidates([
-            {
-              id: 1,
-              name: "María García",
-              email: "maria.garcia@email.com",
-              cvUrl: "/cv/maria-garcia.pdf",
-              score: 85,
-              strengths: ["Experiencia sólida en React", "Conocimiento avanzado de TypeScript"],
-              weaknesses: ["Poca experiencia con testing", "Sin experiencia en Next.js"],
-              evaluation: "Candidata muy prometedora con excelente base técnica",
-              appliedAt: "2024-01-20",
-            },
-            {
-              id: 2,
-              name: "Juan Pérez",
-              email: "juan.perez@email.com",
-              cvUrl: "/cv/juan-perez.pdf",
-              score: 72,
-              strengths: ["Experiencia en metodologías ágiles", "Buen conocimiento de CSS"],
-              weaknesses: ["Experiencia limitada con React", "Falta de proyectos recientes"],
-              evaluation: "Candidato con potencial que necesita actualización técnica",
-              appliedAt: "2024-01-19",
-            },
-            {
-              id: 3,
-              name: "Ana López",
-              email: "ana.lopez@email.com",
-              cvUrl: "/cv/ana-lopez.pdf",
-              score: 91,
-              strengths: ["Experiencia completa en stack moderno", "Liderazgo técnico demostrado"],
-              weaknesses: ["Expectativas salariales altas", "Disponibilidad limitada"],
-              evaluation: "Candidata excepcional, altamente recomendada",
-              appliedAt: "2024-01-18",
-            },
-          ])
-        }, 1000)
+        setCandidates([])
       }
     } catch (error) {
       console.error("Error fetching candidates:", error)
@@ -94,6 +77,9 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
         description: "No se pudieron cargar los candidatos",
         variant: "destructive",
       })
+      
+      // Fallback to empty array on error
+      setCandidates([])
     } finally {
       setIsLoading(false)
     }
@@ -107,6 +93,7 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
   }
 
   const getInitials = (name: string) => {
+    if (!name) return "??"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -114,7 +101,7 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
       .toUpperCase()
   }
 
-  const handleViewDetails = (candidateId: number) => {
+  const handleViewDetails = (candidateId: string) => {
     setSelectedCandidateId(candidateId)
     setIsModalOpen(true)
   }
@@ -148,6 +135,19 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
         variant: "destructive",
       })
     }
+  }
+
+  const handleContactCandidate = (email: string, name: string) => {
+    const subject = encodeURIComponent(`Oportunidad laboral - Proceso de selección`)
+    const body = encodeURIComponent(`Estimado/a ${name},\n\nEsperamos que se encuentre bien. Nos ponemos en contacto con usted en relación al proceso de selección en el que ha participado.\n\nNos gustaría coordinar una entrevista para conocer más sobre su perfil profesional.\n\n¿Podría indicarnos su disponibilidad para los próximos días?\n\nQuedamos atentos a su respuesta.\n\nSaludos cordiales,\nEquipo de Recursos Humanos`)
+    const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`
+    
+    window.open(mailtoUrl, '_blank')
+    
+    toast({
+      title: "Cliente de email abierto",
+      description: `Se ha abierto el cliente de email para contactar a ${name}`,
+    })
   }
 
   if (isLoading) {
@@ -214,7 +214,13 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
                           <Star className="mr-1 h-4 w-4 fill-current text-yellow-500" />
                           {candidate.score}/100
                         </div>
-                        <span>Aplicó: {new Date(candidate.appliedAt).toLocaleDateString()}</span>
+                        <span>Evaluado: {new Date(candidate.evaluation_date).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}</span>
                       </div>
 
                       <p className="text-sm text-muted-foreground mb-3 italic">"{candidate.evaluation}"</p>
@@ -261,7 +267,7 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
                       <Download className="mr-2 h-4 w-4" />
                       Descargar CV
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleContactCandidate(candidate.email, candidate.name)}>
                       <Mail className="mr-2 h-4 w-4" />
                       Contactar
                     </Button>

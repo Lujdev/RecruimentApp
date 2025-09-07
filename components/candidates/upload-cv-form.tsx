@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Loader2, Upload, FileText, X } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface UploadCVFormProps {
   roleId: string
@@ -18,6 +19,7 @@ interface UploadCVFormProps {
 }
 
 export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
+  const { notifyCvUploaded } = useAppContext()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -91,6 +93,9 @@ export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
       setProgress(100)
 
       if (response.message) {
+        // Notify context about CV upload
+        notifyCvUploaded(roleId, response.candidate)
+        
         setTimeout(() => {
           onSuccess()
           // Reset form

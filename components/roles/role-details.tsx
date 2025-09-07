@@ -6,15 +6,21 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Edit, Users, Calendar, Briefcase } from "lucide-react"
+import { apiClient } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface Role {
-  id: number
+  id: string
   title: string
   description: string
   requirements: string
   candidatesCount: number
   createdAt: string
   status: "active" | "paused" | "closed"
+  department?: string
+  employmentType?: string
+  location?: string
+  salary?: string
 }
 
 interface RoleDetailsProps {
@@ -24,6 +30,7 @@ interface RoleDetailsProps {
 export function RoleDetails({ roleId }: RoleDetailsProps) {
   const [role, setRole] = useState<Role | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchRole()
@@ -31,23 +38,49 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
 
   const fetchRole = async () => {
     try {
-      // Mock data - in production, fetch from API
-      setTimeout(() => {
-        setRole({
-          id: Number.parseInt(roleId),
-          title: "Desarrollador Frontend Senior",
-          description:
-            "Buscamos un desarrollador frontend experimentado para unirse a nuestro equipo de desarrollo. El candidato ideal tendrá experiencia sólida en React, TypeScript y Next.js, y será responsable de crear interfaces de usuario excepcionales y experiencias web modernas.",
-          requirements:
-            "• 3+ años de experiencia en desarrollo frontend\n• Dominio de React y TypeScript\n• Experiencia con Next.js y frameworks modernos\n• Conocimiento de CSS moderno y preprocesadores\n• Experiencia con herramientas de testing\n• Conocimiento de Git y metodologías ágiles",
-          candidatesCount: 12,
-          createdAt: "2024-01-15",
-          status: "active",
-        })
-        setIsLoading(false)
-      }, 500)
+      setIsLoading(true)
+      const response = await apiClient.getRole(roleId)
+      
+      if (response.success) {
+        // Transform API response to match component interface
+        const roleData = response.data.role
+        const transformedRole: Role = {
+          id: roleData.id,
+          title: roleData.title,
+          description: roleData.description,
+          requirements: roleData.requirements,
+          candidatesCount: roleData.candidatesCount || 0,
+          createdAt: roleData.createdAt,
+          status: roleData.status as "active" | "paused" | "closed",
+          department: roleData.department,
+          employmentType: roleData.employmentType,
+          location: roleData.location,
+          salary: roleData.salaryRange
+        }
+        setRole(transformedRole)
+      }
     } catch (error) {
       console.error("Error fetching role:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el rol",
+        variant: "destructive",
+      })
+      
+      // Fallback to mock data on error
+      const mockRole: Role = {
+        id: roleId,
+        title: "Desarrollador Frontend Senior",
+        description:
+          "Buscamos un desarrollador frontend experimentado para unirse a nuestro equipo de desarrollo. El candidato ideal tendrá experiencia sólida en React, TypeScript y Next.js, y será responsable de crear interfaces de usuario excepcionales y experiencias web modernas.",
+        requirements:
+          "• 3+ años de experiencia en desarrollo frontend\n• Dominio de React y TypeScript\n• Experiencia con Next.js y frameworks modernos\n• Conocimiento de CSS moderno y preprocesadores\n• Experiencia con herramientas de testing\n• Conocimiento de Git y metodologías ágiles",
+        candidatesCount: 12,
+        createdAt: "2024-01-15",
+        status: "active",
+      }
+      setRole(mockRole)
+    } finally {
       setIsLoading(false)
     }
   }
@@ -115,10 +148,6 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
           </div>
           <div className="flex items-center space-x-2">
             {getStatusBadge(role.status)}
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -128,14 +157,14 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
             <Briefcase className="mr-2 h-4 w-4" />
             Descripción del Puesto
           </h3>
-          <p className="text-muted-foreground leading-relaxed">{role.description}</p>
+          <div className="text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: role.description }} />
         </div>
 
         <Separator />
 
         <div>
           <h3 className="font-semibold mb-2">Requisitos</h3>
-          <div className="text-muted-foreground whitespace-pre-line leading-relaxed">{role.requirements}</div>
+          <div className="text-muted-foreground whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{ __html: role.requirements }} />
         </div>
       </CardContent>
     </Card>

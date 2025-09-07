@@ -126,3 +126,7 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+.ql-editor {
+    min-height: 100px;
+}

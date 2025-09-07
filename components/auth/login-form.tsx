@@ -29,6 +29,7 @@ export function LoginForm() {
 
       if (response.session?.access_token) {
         localStorage.setItem("auth_token", response.session.access_token)
+        localStorage.setItem("refresh_token", response.session.refresh_token)
         localStorage.setItem("user", JSON.stringify(response.user))
         router.push("/dashboard")
       } else {
