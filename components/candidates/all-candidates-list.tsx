@@ -12,22 +12,13 @@ import { apiClient } from "@/lib/api"
 
 interface Candidate {
   id: string
-  candidateName: string
-  candidateEmail: string
-  candidatePhone: string
-  status: string
+  name: string
+  email: string
+  roleTitle: string
+  score: number | null
   appliedAt: string
-  cvUrl: string
-  jobRole: {
-    id: string
-    title: string
-    department: string
-  }
-  evaluation: {
-    id: string
-    score: number
-    evaluatedAt: string
-  }
+  status: string
+  roleId: string
 }
 
 export function AllCandidatesList() {
@@ -43,10 +34,10 @@ export function AllCandidatesList() {
   const fetchAllCandidates = async () => {
     try {
       setIsLoading(true)
-      const response = await apiClient.getApplications()
+      const response = await apiClient.getCandidates()
       
-      if (response.applications) {
-        setCandidates(response.applications)
+      if (response.data.candidates) {
+        setCandidates(response.data.candidates)
       } else {
         setCandidates([])
       }
@@ -65,8 +56,11 @@ export function AllCandidatesList() {
     }
   }
 
-  const getScoreBadge = (score: number) => {
-    const variant = score >= 8 ? "default" : score >= 6 ? "secondary" : "destructive"
+  const getScoreBadge = (score: number | null) => {
+    if (score === null || score === 0) {
+      return <Badge variant="secondary">No calificada</Badge>
+    }
+    const variant = score >= 80 ? "default" : score >= 60 ? "secondary" : "destructive"
     return (
       <Badge variant={variant}>
         <Star className="h-3 w-3 mr-1" />
@@ -156,7 +150,7 @@ export function AllCandidatesList() {
             <div className="flex items-start space-x-4">
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {getInitials(candidate.candidateName)}
+                  {getInitials(candidate.name)}
                 </AvatarFallback>
               </Avatar>
               
@@ -164,12 +158,12 @@ export function AllCandidatesList() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      {candidate.candidateName}
+                      {candidate.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{candidate.candidateEmail}</p>
+                    <p className="text-sm text-muted-foreground">{candidate.email}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {getScoreBadge(candidate.evaluation.score)}
+                    {getScoreBadge(candidate.score)}
                     {getStatusBadge(candidate.status)}
                   </div>
                 </div>
@@ -177,9 +171,7 @@ export function AllCandidatesList() {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <span className="font-medium">Rol:</span>
-                    <span className="ml-2">{candidate.jobRole.title}</span>
-                    <span className="mx-2">•</span>
-                    <span>{candidate.jobRole.department}</span>
+                    <span className="ml-2">{candidate.roleTitle}</span>
                   </div>
                   
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -207,16 +199,7 @@ export function AllCandidatesList() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownloadCV(candidate.cvUrl, candidate.candidateName)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar CV
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleContactCandidate(candidate.candidateEmail)}
+                    onClick={() => handleContactCandidate(candidate.email)}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Contactar

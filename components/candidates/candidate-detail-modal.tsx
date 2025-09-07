@@ -22,7 +22,7 @@ interface Candidate {
     weaknesses: string[]
     summary: string
     evaluationDate: string
-  }
+  } | null
 }
 
 interface CandidateDetailModalProps {
@@ -133,10 +133,12 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
                   <Mail className="h-4 w-4" />
                   {candidate.email}
                 </p>
-                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                  <Calendar className="h-4 w-4" />
-                  Evaluado el {formatEvaluationDate(candidate.evaluation.evaluationDate)}
-                </p>
+                {candidate.evaluation && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                    <Calendar className="h-4 w-4" />
+                    Evaluado el {formatEvaluationDate(candidate.evaluation.evaluationDate)}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-sm text-muted-foreground">
                     Estado: <Badge variant={candidate.status === 'pending' ? 'secondary' : 'default'}>
@@ -148,21 +150,23 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
             </div>
 
             {/* Score */}
-            <div className="bg-muted/30 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Puntuación de Compatibilidad</h3>
-                <Badge className={`${getScoreColor(candidate.evaluation.score)} border-0`}>{candidate.evaluation.score}/100</Badge>
+            {candidate.evaluation && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold">Puntuación de Compatibilidad</h3>
+                  <Badge className={`${getScoreColor(candidate.evaluation.score)} border-0`}>{candidate.evaluation.score}/100</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex">{getScoreStars(candidate.evaluation.score)}</div>
+                  <span className="text-sm text-muted-foreground">
+                    ({candidate.evaluation.score >= 80 ? "Excelente" : candidate.evaluation.score >= 60 ? "Bueno" : "Regular"} compatibilidad)
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex">{getScoreStars(candidate.evaluation.score)}</div>
-                <span className="text-sm text-muted-foreground">
-                  ({candidate.evaluation.score >= 80 ? "Excelente" : candidate.evaluation.score >= 60 ? "Bueno" : "Regular"} compatibilidad)
-                </span>
-              </div>
-            </div>
+            )}
 
             {/* Evaluation */}
-            {candidate.evaluation.summary && (
+            {candidate.evaluation && candidate.evaluation.summary && (
               <div>
                 <h3 className="font-semibold mb-2">Evaluación General</h3>
                 <div className="bg-muted/50 rounded-lg p-4">
@@ -172,35 +176,37 @@ export function CandidateDetailModal({ candidateId, isOpen, onClose }: Candidate
             )}
 
             {/* Strengths and Weaknesses */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Fortalezas
-                </h3>
-                <div className="space-y-2">
-                  {candidate.evaluation.strengths.map((strength, index) => (
-                    <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">{strength}</p>
-                    </div>
-                  ))}
+            {candidate.evaluation && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    Fortalezas
+                  </h3>
+                  <div className="space-y-2">
+                    {candidate.evaluation.strengths.map((strength, index) => (
+                      <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm text-green-800">{strength}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  Áreas de Mejora
-                </h3>
-                <div className="space-y-2">
-                  {candidate.evaluation.weaknesses.map((weakness, index) => (
-                    <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <p className="text-sm text-orange-800">{weakness}</p>
-                    </div>
-                  ))}
+                <div>
+                  <h3 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    Áreas de Mejora
+                  </h3>
+                  <div className="space-y-2">
+                    {candidate.evaluation.weaknesses.map((weakness, index) => (
+                      <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <p className="text-sm text-orange-800">{weakness}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">

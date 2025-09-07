@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { useAppContext } from "@/contexts/AppContext"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface Role {
   id: string
@@ -57,10 +58,16 @@ const formatCreatedDate = (dateString: string): string => {
   }
 };
 
-export function RolesList() {
-  const { state } = useAppContext()
+interface RolesListProps {
+  onEdit: (role: Role) => void
+}
+
+export function RolesList({ onEdit }: RolesListProps) {
+  const { state, notifyRoleCreated } = useAppContext()
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deletingRole, setDeletingRole] = useState<Role | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -155,6 +162,34 @@ export function RolesList() {
     }
   }
 
+  const handleDelete = (role: Role) => {
+    setDeletingRole(role)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingRole) return
+
+    try {
+      await apiClient.deleteRole(deletingRole.id)
+      toast({
+        title: "Rol eliminado",
+        description: `El rol "${deletingRole.title}" ha sido eliminado.`,
+      })
+      notifyRoleCreated('deleted-role') // Notify context that a role was deleted
+    } catch (error) {
+      console.error("Error deleting role:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el rol",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleteDialogOpen(false)
+      setDeletingRole(null)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const variants = {
       active: "default",
@@ -193,47 +228,63 @@ export function RolesList() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {roles.map((role) => (
-        <Card key={role.id} className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <CardTitle className="text-lg">{role.title}</CardTitle>
-              {getStatusBadge(role.status)}
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">{role.description}</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Users className="mr-2 h-4 w-4" />
-                {role.candidatesCount} candidatos
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {roles.map((role) => (
+          <Card key={role.id} className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <CardTitle className="text-lg">{role.title}</CardTitle>
+                {getStatusBadge(role.status)}
               </div>
+              <div className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: role.description }} />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Users className="mr-2 h-4 w-4" />
+                  {role.candidatesCount} candidatos
+                </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Creado: {formatCreatedDate(role.createdAt)}
-                </span>
-              </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Creado: {formatCreatedDate(role.createdAt)}
+                  </span>
+                </div>
 
-              <div className="flex space-x-2">
-                <Link href={`/dashboard/roles/${role.id}`} className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full bg-transparent">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Ver
+                <div className="flex space-x-2">
+                  <Link href={`/dashboard/roles/${role.id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full bg-transparent">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver
+                    </Button>
+                  </Link>
+                  <Button variant="ghost" size="sm" onClick={() => onEdit(role)}>
+                    <Edit className="h-4 w-4" />
                   </Button>
-                </Link>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(role)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el rol y todas sus aplicaciones.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
