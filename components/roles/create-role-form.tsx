@@ -93,6 +93,7 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
       if (role) {
         const response = await apiClient.updateRole(role.id, roleData)
         if (response.message) {
+          triggerRefresh()
           onSuccess()
         }
       } else {
