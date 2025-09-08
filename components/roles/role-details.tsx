@@ -148,10 +148,6 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
           </div>
           <div className="flex items-center space-x-2">
             {getStatusBadge(role.status)}
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -161,14 +157,14 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
             <Briefcase className="mr-2 h-4 w-4" />
             Descripción del Puesto
           </h3>
-          <p className="text-muted-foreground leading-relaxed">{role.description}</p>
+          <div className="text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: role.description }} />
         </div>
 
         <Separator />
 
         <div>
           <h3 className="font-semibold mb-2">Requisitos</h3>
-          <div className="text-muted-foreground whitespace-pre-line leading-relaxed">{role.requirements}</div>
+          <div className="text-muted-foreground whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{ __html: role.requirements }} />
         </div>
       </CardContent>
     </Card>

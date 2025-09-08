@@ -161,7 +161,7 @@ export default function ComparisonPage() {
             <Users className="h-5 w-5" />
             Candidatos Disponibles
           </CardTitle>
-          <CardDescription>Haz clic en "Añadir" para incluir candidatos en la comparación (máximo 4)</CardDescription>
+          <CardDescription>Haz clic en 'Añadir' para incluir candidatos en la comparación (máximo 4)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

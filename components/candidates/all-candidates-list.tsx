@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,25 +9,17 @@ import { Eye, Download, Mail, Star, Users } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface Candidate {
   id: string
-  candidateName: string
-  candidateEmail: string
-  candidatePhone: string
-  status: string
+  name: string
+  email: string
+  roleTitle: string
+  score: number | null
   appliedAt: string
-  cvUrl: string
-  jobRole: {
-    id: string
-    title: string
-    department: string
-  }
-  evaluation: {
-    id: string
-    score: number
-    evaluatedAt: string
-  }
+  status: string
+  roleId: string
 }
 
 export function AllCandidatesList() {
@@ -35,18 +27,15 @@ export function AllCandidatesList() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
   const { toast } = useToast()
+  const { state } = useAppContext()
 
-  useEffect(() => {
-    fetchAllCandidates()
-  }, [])
-
-  const fetchAllCandidates = async () => {
+  const fetchAllCandidates = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await apiClient.getApplications()
+      const response = await apiClient.getCandidates()
       
-      if (response.applications) {
-        setCandidates(response.applications)
+      if (response.data.candidates) {
+        setCandidates(response.data.candidates)
       } else {
         setCandidates([])
       }
@@ -63,10 +52,23 @@ export function AllCandidatesList() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
-  const getScoreBadge = (score: number) => {
-    const variant = score >= 8 ? "default" : score >= 6 ? "secondary" : "destructive"
+  useEffect(() => {
+    fetchAllCandidates()
+  }, [fetchAllCandidates])
+
+  useEffect(() => {
+    if (state.refreshTrigger > 0) {
+      fetchAllCandidates()
+    }
+  }, [state.refreshTrigger, fetchAllCandidates])
+
+  const getScoreBadge = (score: number | null) => {
+    if (score === null || score === 0) {
+      return <Badge variant="secondary">No calificada</Badge>
+    }
+    const variant = score >= 80 ? "default" : score >= 60 ? "secondary" : "destructive"
     return (
       <Badge variant={variant}>
         <Star className="h-3 w-3 mr-1" />
@@ -88,6 +90,7 @@ export function AllCandidatesList() {
   }
 
   const getInitials = (name: string) => {
+    if (!name) return "??"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -155,7 +158,7 @@ export function AllCandidatesList() {
             <div className="flex items-start space-x-4">
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {getInitials(candidate.candidateName)}
+                  {getInitials(candidate.name)}
                 </AvatarFallback>
               </Avatar>
               
@@ -163,12 +166,12 @@ export function AllCandidatesList() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      {candidate.candidateName}
+                      {candidate.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{candidate.candidateEmail}</p>
+                    <p className="text-sm text-muted-foreground">{candidate.email}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {candidate.evaluation && getScoreBadge(candidate.evaluation.score)}
+                    {getScoreBadge(candidate.score)}
                     {getStatusBadge(candidate.status)}
                   </div>
                 </div>
@@ -176,9 +179,7 @@ export function AllCandidatesList() {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <span className="font-medium">Rol:</span>
-                    <span className="ml-2">{candidate.jobRole.title}</span>
-                    <span className="mx-2">•</span>
-                    <span>{candidate.jobRole.department}</span>
+                    <span className="ml-2">{candidate.roleTitle}</span>
                   </div>
                   
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -190,19 +191,6 @@ export function AllCandidatesList() {
                         day: 'numeric'
                       })}
                     </span>
-                    {candidate.evaluation && (
-                      <>
-                        <span className="mx-2">•</span>
-                        <span className="font-medium">Evaluado:</span>
-                        <span className="ml-2">
-                          {new Date(candidate.evaluation.evaluatedAt).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </>
-                    )}
                   </div>
                 </div>
                 
@@ -219,16 +207,7 @@ export function AllCandidatesList() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownloadCV(candidate.cvUrl, candidate.candidateName)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar CV
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleContactCandidate(candidate.candidateEmail)}
+                    onClick={() => handleContactCandidate(candidate.email)}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Contactar
@@ -242,17 +221,7 @@ export function AllCandidatesList() {
 
       {selectedCandidate && (
         <CandidateDetailModal
-          candidate={{
-            id: parseInt(selectedCandidate.id),
-            name: selectedCandidate.candidateName,
-            email: selectedCandidate.candidateEmail,
-            cvUrl: selectedCandidate.cvUrl,
-            score: selectedCandidate.evaluation?.score || 0,
-            strengths: [],
-            weaknesses: [],
-            evaluation: "",
-            appliedAt: selectedCandidate.appliedAt
-          }}
+          candidateId={selectedCandidate.id}
           isOpen={!!selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
         />
