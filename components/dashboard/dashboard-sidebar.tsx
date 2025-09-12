@@ -24,7 +24,7 @@ export function DashboardSidebar() {
     localStorage.removeItem("auth_token")
     localStorage.removeItem("refresh_token")
     localStorage.removeItem("user")
-    window.location.href = "/auth/login"
+    window.location.href = "/"
   }
 
   return (
