@@ -516,7 +516,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 RecruitAI. Todos los derechos reservados.</p>
+            <p>&copy; 2025 RecruitAI. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
