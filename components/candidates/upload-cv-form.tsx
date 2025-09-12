@@ -19,7 +19,7 @@ interface UploadCVFormProps {
 }
 
 export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
-  const { notifyCvUploaded } = useAppContext()
+  const { triggerRefresh } = useAppContext()
   const [formData, setFormData] = useState({
     name: "",
     email: "",

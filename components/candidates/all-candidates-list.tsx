@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Eye, Download, Mail, Star, Users } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient } from "@/lib/api"
+import { useAppContext } from "@/contexts/AppContext"
 
 interface Candidate {
   id: string
@@ -26,12 +27,9 @@ export function AllCandidatesList() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
   const { toast } = useToast()
+  const { state } = useAppContext()
 
-  useEffect(() => {
-    fetchAllCandidates()
-  }, [])
-
-  const fetchAllCandidates = async () => {
+  const fetchAllCandidates = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await apiClient.getCandidates()
@@ -54,7 +52,17 @@ export function AllCandidatesList() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    fetchAllCandidates()
+  }, [fetchAllCandidates])
+
+  useEffect(() => {
+    if (state.refreshTrigger > 0) {
+      fetchAllCandidates()
+    }
+  }, [state.refreshTrigger, fetchAllCandidates])
 
   const getScoreBadge = (score: number | null) => {
     if (score === null || score === 0) {

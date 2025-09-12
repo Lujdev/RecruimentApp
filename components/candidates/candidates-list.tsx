@@ -223,7 +223,7 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
                         })}</span>
                       </div>
 
-                      <p className="text-sm text-muted-foreground mb-3 italic">"{candidate.evaluation}"</p>
+                      <p className="text-sm text-muted-foreground mb-3 italic">&ldquo;{candidate.evaluation}&rdquo;</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div>

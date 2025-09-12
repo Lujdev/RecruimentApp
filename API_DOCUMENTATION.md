@@ -1,4 +1,3 @@
-
 # API Documentation - RecruimentApp
 
 ## Información General
@@ -12,9 +11,9 @@
 
 La API utiliza autenticación basada en JWT tokens de Supabase. Para acceder a endpoints protegidos, incluye el token en el header `Authorization`:
 
-```
+\`\`\`
 Authorization: Bearer <tu_jwt_token>
-```
+\`\`\`
 
 ### Tipos de Usuario
 - **admin**: Acceso completo a todos los recursos
@@ -31,14 +30,14 @@ Verifica el estado del servidor.
 **Requisitos:** Ninguno
 
 **Respuesta:**
-```json
+\`\`\`json
 {
   "status": "OK",
   "message": "RecruimentApp Backend está funcionando correctamente",
   "timestamp": "2024-01-15T10:30:00.000Z",
   "version": "1.0.0"
 }
-```
+\`\`\`
 
 ---
 
@@ -51,14 +50,14 @@ Registra un nuevo usuario en el sistema.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "email": "usuario@ejemplo.com",
   "password": "contraseña123",
   "fullName": "Juan Pérez",
   "companyName": "Mi Empresa" // opcional
 }
-```
+\`\`\`
 
 **Validaciones:**
 - `email`: Email válido, requerido
@@ -67,7 +66,7 @@ Registra un nuevo usuario en el sistema.
 - `companyName`: Máximo 255 caracteres, opcional
 
 **Respuesta exitosa (201):**
-```json
+\`\`\`json
 {
   "message": "Usuario registrado exitosamente. Revisa tu email para confirmar tu cuenta.",
   "user": {
@@ -76,7 +75,7 @@ Registra un nuevo usuario en el sistema.
     "emailConfirmed": false
   }
 }
-```
+\`\`\`
 
 **Errores:**
 - `400`: Datos de validación inválidos
@@ -89,15 +88,15 @@ Inicia sesión de usuario.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "email": "usuario@ejemplo.com",
   "password": "contraseña123"
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Inicio de sesión exitoso",
   "user": {
@@ -118,7 +117,7 @@ Inicia sesión de usuario.
     "expires_at": 1705312200
   }
 }
-```
+\`\`\`
 
 **Errores:**
 - `400`: Datos de validación inválidos
@@ -131,12 +130,12 @@ Inicia autenticación con Google OAuth.
 **Requisitos:** Ninguno
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "url": "https://accounts.google.com/oauth/authorize?...",
   "message": "Redirige al usuario a esta URL para autenticación con Google"
 }
-```
+\`\`\`
 
 ### POST /api/auth/refresh
 Renueva el token de acceso.
@@ -145,14 +144,14 @@ Renueva el token de acceso.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "refresh_token": "refresh_token_aqui"
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "session": {
     "access_token": "nuevo_jwt_token",
@@ -160,7 +159,7 @@ Renueva el token de acceso.
     "expires_at": 1705312200
   }
 }
-```
+\`\`\`
 
 ### POST /api/auth/logout
 Cierra la sesión del usuario.
@@ -169,11 +168,11 @@ Cierra la sesión del usuario.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Sesión cerrada exitosamente"
 }
-```
+\`\`\`
 
 ### GET /api/auth/profile
 Obtiene el perfil del usuario autenticado.
@@ -182,7 +181,7 @@ Obtiene el perfil del usuario autenticado.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "user": {
     "id": "uuid-del-usuario",
@@ -198,7 +197,7 @@ Obtiene el perfil del usuario autenticado.
     }
   }
 }
-```
+\`\`\`
 
 ### PUT /api/auth/profile
 Actualiza el perfil del usuario.
@@ -208,16 +207,16 @@ Actualiza el perfil del usuario.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "fullName": "Juan Carlos Pérez", // opcional
   "companyName": "Nueva Empresa", // opcional
   "role": "admin" // opcional, valores: admin, recruiter, hr_manager
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Perfil actualizado exitosamente",
   "profile": {
@@ -229,7 +228,7 @@ Actualiza el perfil del usuario.
     "updated_at": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -250,7 +249,7 @@ Obtiene todos los roles de trabajo con filtros opcionales.
 - `createdBy` (opcional): Filtrar por creador (requiere autenticación)
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "roles": [
     {
@@ -280,7 +279,7 @@ Obtiene todos los roles de trabajo con filtros opcionales.
     "hasPrev": false
   }
 }
-```
+\`\`\`
 
 ### GET /api/roles/:id
 Obtiene un rol específico por ID.
@@ -288,7 +287,7 @@ Obtiene un rol específico por ID.
 **Requisitos:** Ninguno (autenticación opcional)
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -312,7 +311,7 @@ Obtiene un rol específico por ID.
     }
   }
 }
-```
+\`\`\`
 
 ### POST /api/roles
 Crea un nuevo rol de trabajo.
@@ -322,7 +321,7 @@ Crea un nuevo rol de trabajo.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "title": "Desarrollador Frontend",
   "description": "Desarrollador especializado en React y TypeScript con experiencia en desarrollo de aplicaciones web modernas",
@@ -332,7 +331,7 @@ Crea un nuevo rol de trabajo.
   "employmentType": "full-time", // opcional, valores: full-time, part-time, contract, internship
   "salaryRange": "40,000 - 60,000 EUR" // opcional
 }
-```
+\`\`\`
 
 **Validaciones:**
 - `title`: 3-255 caracteres, requerido
@@ -344,7 +343,7 @@ Crea un nuevo rol de trabajo.
 - `salaryRange`: Máximo 100 caracteres, opcional
 
 **Respuesta exitosa (201):**
-```json
+\`\`\`json
 {
   "message": "Rol creado exitosamente",
   "role": {
@@ -361,7 +360,7 @@ Crea un nuevo rol de trabajo.
     "created_at": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ### PUT /api/roles/:id
 Actualiza un rol existente.
@@ -371,7 +370,7 @@ Actualiza un rol existente.
 - Content-Type: application/json
 
 **Body:** (todos los campos son opcionales)
-```json
+\`\`\`json
 {
   "title": "Desarrollador Frontend Senior",
   "description": "Nueva descripción actualizada",
@@ -382,10 +381,10 @@ Actualiza un rol existente.
   "salaryRange": "50,000 - 70,000 EUR",
   "status": "active" // valores: active, inactive, closed
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Rol actualizado exitosamente",
   "role": {
@@ -401,7 +400,7 @@ Actualiza un rol existente.
     "updated_at": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ### DELETE /api/roles/:id
 Elimina un rol (o lo marca como cerrado si tiene aplicaciones).
@@ -410,18 +409,18 @@ Elimina un rol (o lo marca como cerrado si tiene aplicaciones).
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Rol eliminado exitosamente"
 }
-```
+\`\`\`
 
 O si tiene aplicaciones asociadas:
-```json
+\`\`\`json
 {
   "message": "Rol cerrado exitosamente (tiene aplicaciones asociadas)"
 }
-```
+\`\`\`
 
 ### GET /api/roles/:id/candidates
 Obtiene todos los candidatos para un rol específico.
@@ -436,7 +435,7 @@ Obtiene todos los candidatos para un rol específico.
 - `search` (opcional): Búsqueda por nombre o email
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "candidates": [
     {
@@ -462,7 +461,7 @@ Obtiene todos los candidatos para un rol específico.
     "hasPrev": false
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -489,7 +488,7 @@ Crea una nueva aplicación con CV.
 - `cv`: Solo archivos PDF, máximo 10MB
 
 **Respuesta exitosa (201):**
-```json
+\`\`\`json
 {
   "message": "Aplicación creada exitosamente. La evaluación se procesará en breve.",
   "application": {
@@ -502,7 +501,7 @@ Crea una nueva aplicación con CV.
     "cvFilePath": "https://storage.supabase.co/object/public/cvs/archivo.pdf"
   }
 }
-```
+\`\`\`
 
 ### GET /api/applications
 Obtiene aplicaciones (solo usuarios autenticados).
@@ -518,7 +517,7 @@ Obtiene aplicaciones (solo usuarios autenticados).
 - `search` (opcional): Búsqueda por nombre o email
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "applications": [
     {
@@ -550,7 +549,7 @@ Obtiene aplicaciones (solo usuarios autenticados).
     "hasPrev": false
   }
 }
-```
+\`\`\`
 
 ### GET /api/applications/:id
 Obtiene una aplicación específica.
@@ -559,7 +558,7 @@ Obtiene una aplicación específica.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "application": {
     "id": "uuid-de-aplicacion",
@@ -585,7 +584,7 @@ Obtiene una aplicación específica.
     "evaluation_date": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ### PUT /api/applications/:id
 Actualiza una aplicación.
@@ -595,17 +594,17 @@ Actualiza una aplicación.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "status": "reviewing", // valores: pending, reviewing, interviewed, hired, rejected
   "candidateName": "María García López", // opcional
   "candidateEmail": "maria.garcia@ejemplo.com", // opcional
   "candidatePhone": "+34 987 654 321" // opcional
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Aplicación actualizada exitosamente",
   "application": {
@@ -618,7 +617,7 @@ Actualiza una aplicación.
     "updated_at": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ### DELETE /api/applications/:id
 Elimina una aplicación.
@@ -627,11 +626,11 @@ Elimina una aplicación.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Aplicación eliminada exitosamente"
 }
-```
+\`\`\`
 
 ---
 
@@ -653,7 +652,7 @@ Obtiene evaluaciones con filtros.
 - `sortOrder` (opcional): Orden (asc, desc)
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "evaluations": [
     {
@@ -684,7 +683,7 @@ Obtiene evaluaciones con filtros.
     "hasPrev": false
   }
 }
-```
+\`\`\`
 
 ### GET /api/evaluations/:id
 Obtiene una evaluación específica.
@@ -693,7 +692,7 @@ Obtiene una evaluación específica.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "evaluation": {
     "id": "uuid-de-evaluacion",
@@ -718,7 +717,7 @@ Obtiene una evaluación específica.
     "job_creator_id": "uuid-del-creador"
   }
 }
-```
+\`\`\`
 
 ### GET /api/evaluations/application/:applicationId
 Obtiene evaluación por ID de aplicación.
@@ -727,7 +726,7 @@ Obtiene evaluación por ID de aplicación.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "evaluation": {
     "id": "uuid-de-evaluacion",
@@ -752,7 +751,7 @@ Obtiene evaluación por ID de aplicación.
     "job_creator_id": "uuid-del-creador"
   }
 }
-```
+\`\`\`
 
 ### POST /api/evaluations/reevaluate
 Re-evalúa un CV existente.
@@ -762,14 +761,14 @@ Re-evalúa un CV existente.
 - Content-Type: application/json
 
 **Body:**
-```json
+\`\`\`json
 {
   "applicationId": "uuid-de-aplicacion"
 }
-```
+\`\`\`
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "CV re-evaluado exitosamente",
   "evaluation": {
@@ -783,7 +782,7 @@ Re-evalúa un CV existente.
     "evaluation_date": "2024-01-15T10:30:00.000Z"
   }
 }
-```
+\`\`\`
 
 ### GET /api/evaluations/stats
 Obtiene estadísticas de evaluaciones.
@@ -795,7 +794,7 @@ Obtiene estadísticas de evaluaciones.
 - `jobRoleId` (opcional): Filtrar por rol específico
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "stats": {
     "totalEvaluations": 25,
@@ -809,7 +808,7 @@ Obtiene estadísticas de evaluaciones.
     }
   }
 }
-```
+\`\`\`
 
 ### DELETE /api/evaluations/:id
 Elimina una evaluación.
@@ -818,11 +817,11 @@ Elimina una evaluación.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "message": "Evaluación eliminada exitosamente"
 }
-```
+\`\`\`
 
 ---
 
@@ -835,7 +834,7 @@ Obtiene estadísticas generales del dashboard.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -845,7 +844,7 @@ Obtiene estadísticas generales del dashboard.
     "pendingReviews": 8
   }
 }
-```
+\`\`\`
 
 ### GET /api/dashboard/activity
 Obtiene actividad reciente del sistema.
@@ -857,7 +856,7 @@ Obtiene actividad reciente del sistema.
 - `limit` (opcional): Número de actividades (default: 10)
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -881,7 +880,7 @@ Obtiene actividad reciente del sistema.
     ]
   }
 }
-```
+\`\`\`
 
 ### GET /api/dashboard/analytics
 Obtiene datos de analytics completos.
@@ -890,7 +889,7 @@ Obtiene datos de analytics completos.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -938,7 +937,7 @@ Obtiene datos de analytics completos.
     ]
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -959,7 +958,7 @@ Obtiene todos los candidatos de la empresa.
 - `sortOrder` (opcional): Orden (ASC, DESC)
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -984,7 +983,7 @@ Obtiene todos los candidatos de la empresa.
     }
   }
 }
-```
+\`\`\`
 
 ### GET /api/candidates/:id
 Obtiene detalles específicos de un candidato.
@@ -993,7 +992,7 @@ Obtiene detalles específicos de un candidato.
 - Authorization: Bearer Token
 
 **Respuesta exitosa (200):**
-```json
+\`\`\`json
 {
   "success": true,
   "data": {
@@ -1012,71 +1011,71 @@ Obtiene detalles específicos de un candidato.
     }
   }
 }
-```
+\`\`\`
 
 ---
 
 ## Códigos de Error
 
 ### Errores de Validación (400)
-```json
+\`\`\`json
 {
   "error": {
     "message": "El email es requerido",
     "status": 400
   }
 }
-```
+\`\`\`
 
 ### No Autorizado (401)
-```json
+\`\`\`json
 {
   "error": {
     "message": "Token de acceso requerido",
     "status": 401
   }
 }
-```
+\`\`\`
 
 ### Prohibido (403)
-```json
+\`\`\`json
 {
   "error": {
     "message": "No tienes permisos para acceder a este recurso",
     "status": 403
   }
 }
-```
+\`\`\`
 
 ### No Encontrado (404)
-```json
+\`\`\`json
 {
   "error": {
     "message": "Recurso no encontrado",
     "status": 404
   }
 }
-```
+\`\`\`
 
 ### Conflicto (409)
-```json
+\`\`\`json
 {
   "error": {
     "message": "Ya existe una aplicación de este candidato para este rol",
     "status": 409
   }
 }
-```
+\`\`\`
 
 ### Error Interno del Servidor (500)
-```json
+\`\`\`json
 {
   "error": {
     "message": "Error interno del servidor",
     "status": 500
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -1105,7 +1104,7 @@ Obtiene detalles específicos de un candidato.
 ### Flujo Completo de Aplicación
 
 1. **Crear Rol**:
-   ```bash
+   \`\`\`bash
    POST /api/roles
    Authorization: Bearer <token>
    Content-Type: application/json
@@ -1115,10 +1114,10 @@ Obtiene detalles específicos de un candidato.
      "description": "Desarrollador especializado en React",
      "requirements": "3+ años de experiencia"
    }
-   ```
+   \`\`\`
 
 2. **Aplicar al Rol**:
-   ```bash
+   \`\`\`bash
    POST /api/applications
    Content-Type: multipart/form-data
    
@@ -1126,16 +1125,16 @@ Obtiene detalles específicos de un candidato.
    candidateName: María García
    candidateEmail: maria@ejemplo.com
    cv: <archivo_pdf>
-   ```
+   \`\`\`
 
 3. **Ver Evaluación**:
-   ```bash
+   \`\`\`bash
    GET /api/evaluations/application/<application_id>
    Authorization: Bearer <token>
-   ```
+   \`\`\`
 
 4. **Actualizar Estado**:
-   ```bash
+   \`\`\`bash
    PUT /api/applications/<application_id>
    Authorization: Bearer <token>
    Content-Type: application/json
@@ -1143,4 +1142,4 @@ Obtiene detalles específicos de un candidato.
    {
      "status": "reviewing"
    }
-   ```
+   \`\`\`
