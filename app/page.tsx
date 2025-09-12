@@ -30,24 +30,24 @@ export default function HomePage() {
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <Link
+              <a
                 href="#features"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Funcionalidades
-              </Link>
-              <Link
+              </a>
+              <a
                 href="#analytics"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Analytics
-              </Link>
-              <Link
+              </a>
+              <a
                 href="#testimonials"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Testimonios
-              </Link>
+              </a>
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -421,44 +421,33 @@ export default function HomePage() {
             <div>
               <h3 className="font-semibold mb-4">Producto</h3>
               <div className="space-y-2 text-sm">
-                <Link href="#features" className="text-muted-foreground hover:text-foreground block">
+                <a href="#features" className="text-muted-foreground hover:text-foreground block cursor-pointer">
                   Funcionalidades
-                </Link>
-                <Link href="#analytics" className="text-muted-foreground hover:text-foreground block">
+                </a>
+                <a href="#analytics" className="text-muted-foreground hover:text-foreground block cursor-pointer">
                   Analytics
-                </Link>
-                <Link href="/auth/register" className="text-muted-foreground hover:text-foreground block">
-                  Precios
-                </Link>
+                </a>
               </div>
             </div>
 
             <div>
               <h3 className="font-semibold mb-4">Empresa</h3>
               <div className="space-y-2 text-sm">
-                <Link href="#" className="text-muted-foreground hover:text-foreground block">
-                  Acerca de
-                </Link>
-                <Link href="#testimonials" className="text-muted-foreground hover:text-foreground block">
+                {/* Cambiando testimonios a anchor link */}
+                <a href="#testimonials" className="text-muted-foreground hover:text-foreground block cursor-pointer">
                   Testimonios
-                </Link>
-                <Link href="#" className="text-muted-foreground hover:text-foreground block">
-                  Contacto
-                </Link>
+                </a>
               </div>
             </div>
 
             <div>
               <h3 className="font-semibold mb-4">Soporte</h3>
               <div className="space-y-2 text-sm">
-                <Link href="#" className="text-muted-foreground hover:text-foreground block">
-                  Documentación
+                <Link href="/auth/login" className="text-muted-foreground hover:text-foreground block">
+                  Iniciar Sesión
                 </Link>
-                <Link href="#" className="text-muted-foreground hover:text-foreground block">
-                  Ayuda
-                </Link>
-                <Link href="#" className="text-muted-foreground hover:text-foreground block">
-                  Estado del servicio
+                <Link href="/auth/register" className="text-muted-foreground hover:text-foreground block">
+                  Registrarse
                 </Link>
               </div>
             </div>
