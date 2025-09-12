@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,38 +18,55 @@ import {
 import Link from "next/link"
 
 export default function HomePage() {
+  const smoothScrollTo = (elementId: string) => {
+    const element = document.getElementById(elementId)
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <a href="#" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <button onClick={scrollToTop} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold text-foreground">RecruitAI</span>
-            </a>
+            </button>
 
             <nav className="hidden md:flex items-center space-x-10">
-              <a
-                href="#features"
+              <button
+                onClick={() => smoothScrollTo("features")}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Funcionalidades
-              </a>
-              <a
-                href="#analytics"
+              </button>
+              <button
+                onClick={() => smoothScrollTo("analytics")}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Analytics
-              </a>
-              <a
-                href="#testimonials"
+              </button>
+              <button
+                onClick={() => smoothScrollTo("testimonials")}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Testimonios
-              </a>
+              </button>
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -407,12 +426,12 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <a href="#" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <button onClick={scrollToTop} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <Brain className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <span className="text-xl font-bold">RecruitAI</span>
-              </a>
+              </button>
               <p className="text-sm text-muted-foreground">
                 Plataforma de reclutamiento inteligente que transforma la manera de encontrar talento.
               </p>
@@ -421,22 +440,30 @@ export default function HomePage() {
             <div>
               <h3 className="font-semibold mb-4">Producto</h3>
               <div className="space-y-2 text-sm">
-                <a href="#features" className="text-muted-foreground hover:text-foreground block cursor-pointer">
+                <button
+                  onClick={() => smoothScrollTo("features")}
+                  className="text-muted-foreground hover:text-foreground block cursor-pointer"
+                >
                   Funcionalidades
-                </a>
-                <a href="#analytics" className="text-muted-foreground hover:text-foreground block cursor-pointer">
+                </button>
+                <button
+                  onClick={() => smoothScrollTo("analytics")}
+                  className="text-muted-foreground hover:text-foreground block cursor-pointer"
+                >
                   Analytics
-                </a>
+                </button>
               </div>
             </div>
 
             <div>
               <h3 className="font-semibold mb-4">Empresa</h3>
               <div className="space-y-2 text-sm">
-                {/* Cambiando testimonios a anchor link */}
-                <a href="#testimonials" className="text-muted-foreground hover:text-foreground block cursor-pointer">
+                <button
+                  onClick={() => smoothScrollTo("testimonials")}
+                  className="text-muted-foreground hover:text-foreground block cursor-pointer"
+                >
                   Testimonios
-                </a>
+                </button>
               </div>
             </div>
 
