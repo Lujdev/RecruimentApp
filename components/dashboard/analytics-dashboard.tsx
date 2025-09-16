@@ -31,6 +31,32 @@ interface AnalyticsData {
     week: string
     applications: number
   }>
+  temporalComparison: {
+    candidatesChange: {
+      current: number
+      previous: number
+      percentage: number
+      period: string
+    }
+    rolesChange: {
+      current: number
+      previous: number
+      percentage: number
+      period: string
+    }
+    scoreChange: {
+      current: number
+      previous: number
+      difference: number
+      period: string
+    }
+    weeklyChange: {
+      current: number
+      previous: number
+      percentage: number
+      period: string
+    }
+  }
 }
 
 export function AnalyticsDashboard() {
@@ -70,7 +96,13 @@ export function AnalyticsDashboard() {
           weeklyApplications: response.data.weeklyApplications.map(week => ({
             week: week.week,
             applications: week.count
-          }))
+          })),
+          temporalComparison: response.data.temporalComparison || {
+            candidatesChange: { current: 0, previous: 0, percentage: 0, period: "mes" },
+            rolesChange: { current: 0, previous: 0, percentage: 0, period: "semana" },
+            scoreChange: { current: 0, previous: 0, difference: 0, period: "mes" },
+            weeklyChange: { current: 0, previous: 0, percentage: 0, period: "semana" }
+          }
         }
         setAnalytics(transformedData)
       }
@@ -115,6 +147,12 @@ export function AnalyticsDashboard() {
           { week: "Sem 4", applications: 28 },
           { week: "Sem 5", applications: 30 },
         ],
+        temporalComparison: {
+          candidatesChange: { current: 127, previous: 113, percentage: 12.4, period: "mes" },
+          rolesChange: { current: 8, previous: 6, percentage: 33.3, period: "semana" },
+          scoreChange: { current: 73.5, previous: 71.2, difference: 2.3, period: "mes" },
+          weeklyChange: { current: 30, previous: 28, percentage: 7.1, period: "semana" }
+        }
       }
       setAnalytics(mockData)
     } finally {
@@ -124,17 +162,47 @@ export function AnalyticsDashboard() {
 
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
 
+  // Helper function to format percentage changes
+  const formatChange = (percentage: number, isDifference = false) => {
+    const value = isDifference ? percentage : percentage
+    const sign = value > 0 ? "+" : ""
+    const color = value > 0 ? "text-green-600" : "text-red-600"
+    return { sign, value: value.toFixed(1), color }
+  }
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="space-y-2">
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-              <div className="h-8 bg-muted rounded w-1/2"></div>
-            </CardHeader>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        {/* Loading skeleton for metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 w-4 bg-muted rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        {/* Loading skeleton for charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-6 bg-muted rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
@@ -144,75 +212,103 @@ export function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Candidatos</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Candidatos</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalCandidates}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12%</span> desde el mes pasado
+            <div className="text-2xl font-bold">{analytics.totalCandidates.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className={formatChange(analytics.temporalComparison.candidatesChange.percentage).color}>
+                {formatChange(analytics.temporalComparison.candidatesChange.percentage).sign}{formatChange(analytics.temporalComparison.candidatesChange.percentage).value}%
+              </span>{" "}
+              desde el {analytics.temporalComparison.candidatesChange.period} pasado
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Roles Activos</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Roles Activos</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.totalRoles}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-blue-600">+2</span> nuevos esta semana
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className={formatChange(analytics.temporalComparison.rolesChange.percentage).color}>
+                {formatChange(analytics.temporalComparison.rolesChange.percentage).sign}{formatChange(analytics.temporalComparison.rolesChange.percentage).value}%
+              </span>{" "}
+              desde la {analytics.temporalComparison.rolesChange.period} pasada
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Puntuación Promedio</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Puntuación Promedio</CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.averageScore}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+2.3</span> puntos este mes
+            <div className="text-2xl font-bold">{analytics.averageScore.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className={formatChange(analytics.temporalComparison.scoreChange.difference, true).color}>
+                {formatChange(analytics.temporalComparison.scoreChange.difference, true).sign}{formatChange(analytics.temporalComparison.scoreChange.difference, true).value}
+              </span>{" "}
+              puntos este {analytics.temporalComparison.scoreChange.period}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Candidatos Destacados</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Aplicaciones Esta Semana</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {analytics.scoreDistribution.find((d) => d.range === "90-100")?.count || 0}
+              {analytics.temporalComparison.weeklyChange.current}
             </div>
-            <p className="text-xs text-muted-foreground">Puntuación 90+</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className={formatChange(analytics.temporalComparison.weeklyChange.percentage).color}>
+                {formatChange(analytics.temporalComparison.weeklyChange.percentage).sign}{formatChange(analytics.temporalComparison.weeklyChange.percentage).value}%
+              </span>{" "}
+              vs {analytics.temporalComparison.weeklyChange.period} pasada
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Score Distribution */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Distribución de Puntuaciones</CardTitle>
+            <CardTitle className="text-lg">Distribución de Puntuaciones</CardTitle>
             <CardDescription>Rango de puntuaciones de todos los candidatos</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={analytics.scoreDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis 
+                  dataKey="range" 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                    fontSize: '12px'
+                  }}
+                />
                 <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -220,24 +316,38 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Weekly Applications */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Aplicaciones Semanales</CardTitle>
+            <CardTitle className="text-lg">Aplicaciones Semanales</CardTitle>
             <CardDescription>Tendencia de aplicaciones en las últimas 5 semanas</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={analytics.weeklyApplications}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis 
+                  dataKey="week" 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                    fontSize: '12px'
+                  }}
+                />
                 <Line
                   type="monotone"
                   dataKey="applications"
                   stroke="#10b981"
                   strokeWidth={3}
-                  dot={{ fill: "#10b981" }}
+                  dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -246,26 +356,26 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Role Statistics and Top Candidates */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Role Statistics */}
-        <Card className="lg:col-span-2">
+        <Card className="xl:col-span-2 hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Estadísticas por Rol</CardTitle>
+            <CardTitle className="text-lg">Estadísticas por Rol</CardTitle>
             <CardDescription>Candidatos y puntuación promedio por posición</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {analytics.roleStats.map((role, index) => (
-                <div key={role.role} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                <div key={role.role} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{role.role}</h4>
-                      <Badge variant="secondary">{role.candidates} candidatos</Badge>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-sm">{role.role}</h4>
+                      <Badge variant="secondary" className="text-xs">{role.candidates} candidatos</Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Puntuación promedio:</span>
-                      <span className="font-medium">{role.avgScore}</span>
-                      <Progress value={role.avgScore} className="flex-1 max-w-[100px]" />
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">Promedio:</span>
+                      <span className="font-semibold text-sm">{role.avgScore.toFixed(1)}</span>
+                      <Progress value={role.avgScore} className="flex-1 max-w-[120px] h-2" />
                     </div>
                   </div>
                 </div>
@@ -275,15 +385,15 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Top Candidates */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Mejores Candidatos</CardTitle>
+            <CardTitle className="text-lg">Mejores Candidatos</CardTitle>
             <CardDescription>Top 4 candidatos por puntuación</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {analytics.topCandidates.map((candidate, index) => (
-                <div key={candidate.name} className="flex items-center gap-3">
+                <div key={candidate.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
                       index === 0
@@ -297,11 +407,11 @@ export function AnalyticsDashboard() {
                   >
                     {index + 1}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{candidate.name}</p>
-                    <p className="text-xs text-muted-foreground">{candidate.role}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{candidate.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{candidate.role}</p>
                   </div>
-                  <Badge className="bg-green-100 text-green-800 border-green-200">{candidate.score}</Badge>
+                  <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">{candidate.score}</Badge>
                 </div>
               ))}
             </div>
