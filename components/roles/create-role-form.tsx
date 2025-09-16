@@ -190,12 +190,12 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="salaryRange">Rango Salarial (Opcional)</Label>
+          <Label htmlFor="salaryRange">Salario Mensual ($) (Opcional)</Label>
           <Input
             id="salaryRange"
             name="salaryRange"
             type="number"
-            placeholder="ej. 40000"
+            placeholder="ej. 500"
             value={formData.salaryRange}
             onChange={handleChange}
           />

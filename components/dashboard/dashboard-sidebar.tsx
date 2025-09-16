@@ -13,7 +13,6 @@ const navigation = [
   { name: "Candidatos", href: "/dashboard/candidates", icon: FileText },
   { name: "Análisis", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Comparación", href: "/dashboard/comparison", icon: GitCompare },
-  { name: "Configuración", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function DashboardSidebar() {

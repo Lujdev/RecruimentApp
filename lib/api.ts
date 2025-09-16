@@ -788,6 +788,33 @@ class ApiClient {
           week: string
           count: number
         }>
+        // Temporal comparison data
+        temporalComparison: {
+          candidatesChange: {
+            current: number
+            previous: number
+            percentage: number
+            period: string
+          }
+          rolesChange: {
+            current: number
+            previous: number
+            percentage: number
+            period: string
+          }
+          scoreChange: {
+            current: number
+            previous: number
+            difference: number
+            period: string
+          }
+          weeklyChange: {
+            current: number
+            previous: number
+            percentage: number
+            period: string
+          }
+        }
       }
     }>("/api/dashboard/analytics")
   }
@@ -837,6 +864,27 @@ class ApiClient {
         hasPrev: boolean
       }
     }>(`/api/candidates${queryString}`)
+  }
+
+  // Comparison endpoint - según nueva estructura
+  async compareCandidates(comparisonData: {
+    roleId: string
+    candidateIds: string[]
+  }) {
+    return this.request<{
+      success: boolean
+      data: {
+        best_candidate_name: string
+        justification: string
+        comparison_summary: Array<{
+          candidate_name: string
+          analysis: string
+        }>
+      }
+    }>("/api/candidates/compare", {
+      method: "POST",
+      body: JSON.stringify(comparisonData),
+    })
   }
 }
 

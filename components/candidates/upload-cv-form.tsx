@@ -19,7 +19,7 @@ interface UploadCVFormProps {
 }
 
 export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
-  const { triggerRefresh } = useAppContext()
+  const { triggerRefresh, notifyCvUploaded } = useAppContext()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -94,7 +94,7 @@ export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
 
       if (response.message) {
         // Notify context about CV upload
-        notifyCvUploaded(roleId, response.candidate)
+        notifyCvUploaded(response.application?.id || roleId)
         
         setTimeout(() => {
           onSuccess()
