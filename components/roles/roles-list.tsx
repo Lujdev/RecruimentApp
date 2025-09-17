@@ -30,7 +30,6 @@ interface Role {
 // Función auxiliar para formatear fechas de manera segura
 const formatCreatedDate = (dateString: string): string => {
   try {
-    console.log('Formatting date:', dateString);
     
     // Verificar si la fecha está vacía o es null/undefined
     if (!dateString) {
@@ -40,7 +39,6 @@ const formatCreatedDate = (dateString: string): string => {
 
     // Usar parseISO directamente para fechas ISO 8601 (como 2025-08-25T18:36:47.182Z)
     const parsedDate = parseISO(dateString);
-    console.log('Parsed with parseISO:', parsedDate);
 
     // Verificar si la fecha es válida
     if (!isValid(parsedDate)) {
@@ -50,7 +48,6 @@ const formatCreatedDate = (dateString: string): string => {
 
     // Formatear la fecha usando date-fns con locale español
     const formattedDate = format(parsedDate, 'dd/MM/yyyy', { locale: es });
-    console.log('Formatted date:', formattedDate);
     return formattedDate;
     
   } catch (error) {

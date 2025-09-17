@@ -10,8 +10,6 @@ class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
-    console.log("[v0] Making API request to:", url)
-    console.log("[v0] Request options:", { method: options.method || "GET", headers: options.headers })
 
     // Get token from localStorage
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
@@ -26,15 +24,11 @@ class ApiClient {
     }
 
     try {
-      console.log("[v0] Sending fetch request...")
       const response = await fetch(url, config)
-      console.log("[v0] Response status:", response.status)
-      console.log("[v0] Response ok:", response.ok)
 
       let data
       try {
         data = await response.json()
-        console.log("[v0] Response data:", data)
       } catch (jsonError) {
         console.error("[v0] Failed to parse JSON response:", jsonError)
         throw new Error(`Server returned non-JSON response. Status: ${response.status}`)
