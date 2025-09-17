@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
+import { ExpandableText } from "@/components/ui/expandable-text"
 import { CheckCircle, AlertCircle, Star, X, Users, Trophy, FileText } from "lucide-react"
 
 interface Candidate {
@@ -133,7 +134,17 @@ export function CandidateComparison({ candidates, onRemoveCandidate, comparisonR
               {candidate.evaluation && (
                 <div>
                   <span className="text-sm font-medium text-blue-800">Evaluación:</span>
-                  <p className="text-sm text-blue-700 mt-1 line-clamp-2">{candidate.evaluation}</p>
+                  <div className="text-sm text-blue-700 mt-1">
+                    <ExpandableText 
+                      text={candidate.evaluation} 
+                      maxLength={120}
+                      className="text-sm text-blue-700"
+                      buttonText={{
+                        expand: "Leer más",
+                        collapse: "Leer menos"
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -145,8 +156,16 @@ export function CandidateComparison({ candidates, onRemoveCandidate, comparisonR
                 </h4>
                 <div className="space-y-1">
                   {candidate.strengths.slice(0, 2).map((strength, index) => (
-                    <div key={index} className="text-xs bg-green-50 text-green-800 p-2 rounded border border-green-200 line-clamp-2">
-                      {strength}
+                    <div key={index} className="text-xs bg-green-50 text-green-800 p-2 rounded border border-green-200">
+                      <ExpandableText 
+                        text={strength} 
+                        maxLength={80}
+                        className="text-xs text-green-800"
+                        buttonText={{
+                          expand: "Ver más",
+                          collapse: "Ver menos"
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -162,9 +181,17 @@ export function CandidateComparison({ candidates, onRemoveCandidate, comparisonR
                   {candidate.weaknesses.slice(0, 2).map((weakness, index) => (
                     <div
                       key={index}
-                      className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-200 line-clamp-2"
+                      className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-200"
                     >
-                      {weakness}
+                      <ExpandableText 
+                        text={weakness} 
+                        maxLength={80}
+                        className="text-xs text-orange-800"
+                        buttonText={{
+                          expand: "Ver más",
+                          collapse: "Ver menos"
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -201,7 +228,17 @@ export function CandidateComparison({ candidates, onRemoveCandidate, comparisonR
                     <FileText className="h-4 w-4" />
                     Justificación
                   </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">{comparisonResult.justification}</p>
+                  <div className="text-sm text-gray-700 leading-relaxed">
+                    <ExpandableText 
+                      text={comparisonResult.justification} 
+                      maxLength={250}
+                      className="text-sm text-gray-700"
+                      buttonText={{
+                        expand: "Leer más",
+                        collapse: "Leer menos"
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -259,7 +296,17 @@ export function CandidateComparison({ candidates, onRemoveCandidate, comparisonR
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-700 leading-relaxed">{summary.analysis}</p>
+                          <div className="text-sm text-gray-700 leading-relaxed">
+                            <ExpandableText 
+                              text={summary.analysis} 
+                              maxLength={200}
+                              className="text-sm text-gray-700"
+                              buttonText={{
+                                expand: "Leer más",
+                                collapse: "Leer menos"
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

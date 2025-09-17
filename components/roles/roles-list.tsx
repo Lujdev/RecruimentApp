@@ -24,6 +24,7 @@ interface Role {
   department?: string
   employmentType?: string
   location?: string
+  salary?: string
 }
 
 // Función auxiliar para formatear fechas de manera segura
@@ -84,21 +85,14 @@ export function RolesList({ onEdit }: RolesListProps) {
   const fetchRoles = async () => {
     try {
       setIsLoading(true)
-      console.log("[DEBUG] Fetching roles...")
       const response = await apiClient.getRoles({
         page: 1,
         limit: 50
       })
       
-      console.log("[DEBUG] API Response:", response)
-      console.log("[DEBUG] Response.roles:", response.roles)
-      console.log("[DEBUG] Response.roles length:", response.roles?.length)
-      
       if (response.roles && Array.isArray(response.roles)) {
-        console.log("[DEBUG] Processing roles array with", response.roles.length, "items")
         // Transform API response to match component interface
         const transformedRoles: Role[] = response.roles.map(role => {
-          console.log("[DEBUG] Processing role:", role)
           return {
             id: role.id,
             title: role.title,
@@ -109,13 +103,12 @@ export function RolesList({ onEdit }: RolesListProps) {
             status: role.status as "active" | "paused" | "closed",
             department: role.department,
             employmentType: role.employment_type,
-            location: role.location
+            location: role.location,
+            salary: role.salary_range
           }
         })
-        console.log("[DEBUG] Transformed roles:", transformedRoles)
         setRoles(transformedRoles)
       } else {
-        console.log("[DEBUG] No roles found in response or roles is not an array")
         setRoles([])
       }
     } catch (error) {

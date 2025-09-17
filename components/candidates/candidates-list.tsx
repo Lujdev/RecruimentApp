@@ -5,11 +5,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Eye, Download, Mail, Star, Users } from "lucide-react"
+import { Eye, Download, Mail, Star, Users, Trash2 } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient } from "@/lib/api"
 import { useAppContext } from "@/contexts/AppContext"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Candidate {
   id: string
@@ -34,8 +45,9 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null)
   const { toast } = useToast()
-  const { state } = useAppContext()
+  const { state, triggerRefresh } = useAppContext()
 
   useEffect(() => {
     fetchCandidates()
@@ -150,6 +162,32 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
     })
   }
 
+  const handleDeleteCandidate = async (candidateId: string, candidateName: string) => {
+    try {
+      setDeletingCandidateId(candidateId)
+      await apiClient.deleteCandidate(candidateId)
+      
+      // Remove candidate from local state
+      setCandidates(prev => prev.filter(candidate => candidate.id !== candidateId))
+      
+      // Trigger refresh in context
+      triggerRefresh()
+      
+      toast({
+        title: "Candidato eliminado",
+        description: `${candidateName} ha sido eliminado exitosamente`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el candidato",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingCandidateId(null)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -214,39 +252,49 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
                           <Star className="mr-1 h-4 w-4 fill-current text-yellow-500" />
                           {candidate.score}/100
                         </div>
-                        <span>Evaluado: {new Date(candidate.evaluation_date).toLocaleDateString('es-ES', {
+                        <span>Evaluado: {candidate.evaluation_date ? new Date(candidate.evaluation_date).toLocaleDateString('es-ES', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit'
-                        })}</span>
+                        }) : 'Pendiente'}</span>
                       </div>
 
-                      <p className="text-sm text-muted-foreground mb-3 italic">&ldquo;{candidate.evaluation}&rdquo;</p>
+                      {candidate.evaluation && (
+                        <p className="text-sm text-muted-foreground mb-3 italic">&ldquo;{candidate.evaluation}&rdquo;</p>
+                      )}
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div>
                           <h4 className="font-medium text-green-700 mb-1">Fortalezas:</h4>
                           <ul className="text-muted-foreground space-y-1">
-                            {candidate.strengths.map((strength, index) => (
-                              <li key={index} className="flex items-start">
-                                <span className="text-green-500 mr-1">•</span>
-                                {strength}
-                              </li>
-                            ))}
+                            {candidate.strengths && candidate.strengths.length > 0 ? (
+                              candidate.strengths.map((strength, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-green-500 mr-1">•</span>
+                                  {strength}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-muted-foreground italic">No disponible</li>
+                            )}
                           </ul>
                         </div>
 
                         <div>
                           <h4 className="font-medium text-orange-700 mb-1">Áreas de mejora:</h4>
                           <ul className="text-muted-foreground space-y-1">
-                            {candidate.weaknesses.map((weakness, index) => (
-                              <li key={index} className="flex items-start">
-                                <span className="text-orange-500 mr-1">•</span>
-                                {weakness}
-                              </li>
-                            ))}
+                            {candidate.weaknesses && candidate.weaknesses.length > 0 ? (
+                              candidate.weaknesses.map((weakness, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-orange-500 mr-1">•</span>
+                                  {weakness}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-muted-foreground italic">No disponible</li>
+                            )}
                           </ul>
                         </div>
                       </div>
@@ -271,6 +319,37 @@ export function CandidatesList({ roleId }: CandidatesListProps) {
                       <Mail className="mr-2 h-4 w-4" />
                       Contactar
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          disabled={deletingCandidateId === candidate.id}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {deletingCandidateId === candidate.id ? "Eliminando..." : "Eliminar"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción no se puede deshacer. Se eliminará permanentemente el candidato <strong>{candidate.name}</strong>, 
+                            su evaluación y su CV del sistema.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCandidate(candidate.id, candidate.name)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </CardContent>

@@ -22,7 +22,7 @@ interface Role {
   department?: string
   location?: string
   employmentType?: string
-  salaryRange?: string
+  salary?: string
 }
 
 interface CreateRoleFormProps {
@@ -31,13 +31,13 @@ interface CreateRoleFormProps {
 }
 
 export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
-  const { notifyRoleCreated } = useAppContext()
+  const { notifyRoleCreated, triggerRefresh } = useAppContext()
   const [formData, setFormData] = useState({
     title: "",
     department: "",
     location: "",
     employmentType: "",
-    salaryRange: "",
+    salary: "",
   })
   const [description, setDescription] = useState("")
   const [requirements, setRequirements] = useState("")
@@ -53,7 +53,7 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
         department: role.department || "",
         location: role.location || "",
         employmentType: role.employmentType || "",
-        salaryRange: role.salaryRange || "",
+        salary: role.salary || "",
       })
       setDescription(role.description)
       setRequirements(role.requirements)
@@ -86,7 +86,7 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
       department: formData.department,
       location: formData.location,
       employmentType: formData.employmentType,
-      salaryRange: formData.salaryRange || undefined,
+      salaryRange: formData.salary || undefined,
     }
 
     try {
@@ -109,7 +109,7 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
         department: "",
         location: "",
         employmentType: "",
-        salaryRange: "",
+        salary: "",
       })
       setDescription("")
       setRequirements("")
@@ -143,7 +143,12 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="department">Departamento</Label>
-          <Select onValueChange={(value) => handleSelectChange("department", value)} value={formData.department} required>
+          <Select 
+            key={`department-${role?.id || 'new'}-${formData.department}`}
+            onValueChange={(value) => handleSelectChange("department", value)} 
+            value={formData.department || undefined} 
+            required
+          >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona departamento" />
             </SelectTrigger>
@@ -162,7 +167,12 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="employmentType">Tipo de Empleo</Label>
-          <Select onValueChange={(value) => handleSelectChange("employmentType", value)} value={formData.employmentType} required>
+          <Select 
+            key={`employmentType-${role?.id || 'new'}-${formData.employmentType}`}
+            onValueChange={(value) => handleSelectChange("employmentType", value)} 
+            value={formData.employmentType || undefined} 
+            required
+          >
             <SelectTrigger>
               <SelectValue placeholder="Selecciona tipo" />
             </SelectTrigger>
@@ -190,13 +200,13 @@ export function CreateRoleForm({ onSuccess, role }: CreateRoleFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="salaryRange">Salario Mensual ($) (Opcional)</Label>
+          <Label htmlFor="salary">Salario Mensual ($) (Opcional)</Label>
           <Input
-            id="salaryRange"
-            name="salaryRange"
+            id="salary"
+            name="salary"
             type="number"
             placeholder="ej. 500"
-            value={formData.salaryRange}
+            value={formData.salary}
             onChange={handleChange}
           />
         </div>

@@ -221,15 +221,13 @@ class ApiClient {
     title: string
     description: string
     requirements: string
+    department?: string
+    location?: string
+    employmentType?: string
+    salaryRange?: string
   }) {
-    return this.request("/api/roles", {
-      method: "POST",
-      body: JSON.stringify(roleData),
-    })
-  }
-
-  async getRole(roleId: string) {
     return this.request<{
+      message: string
       role: {
         id: string
         title: string
@@ -237,25 +235,37 @@ class ApiClient {
         requirements: string
         department: string
         location: string
-        salaryRange: string
         employmentType: string
-        experienceLevel: string
-        skills: string[]
-        benefits: string[]
-        isActive: boolean
+        salaryRange: string
         createdAt: string
-        updatedAt: string
-        userId: string
-        user: {
+      }
+    }>("/api/roles", {
+      method: "POST",
+      body: JSON.stringify(roleData),
+    })
+  }
+
+  async getRole(roleId: string) {
+    return this.request<{
+      success: boolean
+      data: {
+        role: {
           id: string
-          email: string
-          profile: {
-            full_name: string
-            company_name: string
+          title: string
+          description: string
+          requirements: string
+          department: string
+          location: string
+          salaryRange: string
+          employmentType: string
+          candidatesCount: number
+          createdAt: string
+          status: string
+          userId: string
+          creator: {
+            name: string
+            company: string
           }
-        }
-        _count: {
-          applications: number
         }
       }
     }>(`/api/roles/${roleId}`)
@@ -837,31 +847,25 @@ class ApiClient {
     const queryString = params.toString() ? `?${params.toString()}` : ''
     
     return this.request<{
-      applications: Array<{
-        id: string
-        job_role_id: string
-        candidate_name: string
-        candidate_email: string
-        candidate_phone: string
-        cv_file_path: string
-        cv_text: string
-        status: string
-        applied_at: string
-        updated_at: string
-        job_title: string
-        department: string
-        score: number
-        strengths: string[]
-        weaknesses: string[]
-        evaluation_summary: string
-      }>
-      pagination: {
-        page: number
-        limit: number
-        total: number
-        totalPages: number
-        hasNext: boolean
-        hasPrev: boolean
+      success: boolean
+      data: {
+        candidates: Array<{
+          id: string
+          name: string
+          email: string
+          roleTitle: string
+          score: number
+          appliedAt: string
+          status: string
+          roleId: string
+        }>
+        pagination: {
+          currentPage: number
+          totalPages: number
+          totalCandidates: number
+          hasNextPage: boolean
+          hasPrevPage: boolean
+        }
       }
     }>(`/api/candidates${queryString}`)
   }
@@ -884,6 +888,15 @@ class ApiClient {
     }>("/api/candidates/compare", {
       method: "POST",
       body: JSON.stringify(comparisonData),
+    })
+  }
+
+  // Delete candidate endpoint - según APIDOC.md
+  async deleteCandidate(candidateId: string) {
+    return this.request<{
+      message: string
+    }>(`/api/candidates/${candidateId}`, {
+      method: "DELETE",
     })
   }
 }
