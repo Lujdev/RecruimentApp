@@ -5,11 +5,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Eye, Download, Mail, Star, Users } from "lucide-react"
+import { Eye, Download, Mail, Star, Users, Trash2 } from "lucide-react"
 import { CandidateDetailModal } from "./candidate-detail-modal"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient } from "@/lib/api"
 import { useAppContext } from "@/contexts/AppContext"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Candidate {
   id: string
@@ -26,16 +37,28 @@ export function AllCandidatesList() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
+  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null)
   const { toast } = useToast()
-  const { state } = useAppContext()
+  const { state, triggerRefresh } = useAppContext()
 
   const fetchAllCandidates = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await apiClient.getCandidates()
       
-      if (response.data.candidates) {
-        setCandidates(response.data.candidates)
+      if (response.success && response.data?.candidates) {
+        // Transform candidates data
+        const transformedCandidates: Candidate[] = response.data.candidates.map(candidate => ({
+          id: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          roleTitle: candidate.roleTitle,
+          score: candidate.score,
+          appliedAt: candidate.appliedAt,
+          status: candidate.status,
+          roleId: candidate.roleId
+        }))
+        setCandidates(transformedCandidates)
       } else {
         setCandidates([])
       }
@@ -109,6 +132,32 @@ export function AllCandidatesList() {
 
   const handleContactCandidate = (email: string) => {
     window.open(`mailto:${email}`, "_blank")
+  }
+
+  const handleDeleteCandidate = async (candidateId: string, candidateName: string) => {
+    try {
+      setDeletingCandidateId(candidateId)
+      await apiClient.deleteCandidate(candidateId)
+      
+      // Remove candidate from local state
+      setCandidates(prev => prev.filter(candidate => candidate.id !== candidateId))
+      
+      // Trigger refresh in context
+      triggerRefresh()
+      
+      toast({
+        title: "Candidato eliminado",
+        description: `${candidateName} ha sido eliminado exitosamente`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el candidato",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingCandidateId(null)
+    }
   }
 
   if (isLoading) {
@@ -212,6 +261,38 @@ export function AllCandidatesList() {
                     <Mail className="h-4 w-4 mr-2" />
                     Contactar
                   </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        disabled={deletingCandidateId === candidate.id}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deletingCandidateId === candidate.id ? "Eliminando..." : "Eliminar"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Se eliminará permanentemente el candidato <strong>{candidate.name}</strong>, 
+                          su evaluación y su CV del sistema.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteCandidate(candidate.id, candidate.name)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

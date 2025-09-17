@@ -12,6 +12,7 @@ import { Loader2, Upload, FileText, X } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { apiClient } from "@/lib/api"
 import { useAppContext } from "@/contexts/AppContext"
+import { useToast } from "@/hooks/use-toast"
 
 interface UploadCVFormProps {
   roleId: string
@@ -20,6 +21,7 @@ interface UploadCVFormProps {
 
 export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
   const { triggerRefresh, notifyCvUploaded } = useAppContext()
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -27,6 +29,7 @@ export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
   })
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState("")
   const [progress, setProgress] = useState(0)
 
@@ -93,15 +96,26 @@ export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
       setProgress(100)
 
       if (response.message) {
-        // Notify context about CV upload
+        // Notify context about CV upload with the application ID
         notifyCvUploaded(response.application?.id || roleId)
         
+        // Set processing state
+        setIsProcessing(true)
+        
+        // Show success message and refresh page after 3 seconds
+        toast({
+          title: "CV procesado exitosamente",
+          description: "El CV se está evaluando con IA. La página se actualizará automáticamente...",
+        })
+        
+        // Wait 3 seconds for evaluation to complete, then refresh the page
         setTimeout(() => {
-          onSuccess()
-          // Reset form
-          setFormData({ name: "", email: "", phone: "" })
-          setFile(null)
-        }, 500)
+          window.location.reload()
+        }, 3000)
+        
+        // Reset form immediately
+        setFormData({ name: "", email: "", phone: "" })
+        setFile(null)
       }
     } catch (error: any) {
       setError(error.message || "Error de conexión. Intenta nuevamente.")
@@ -212,13 +226,22 @@ export function UploadCVForm({ roleId, onSuccess }: UploadCVFormProps) {
         </div>
       )}
 
+      {isProcessing && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-center text-sm text-primary">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <span>Evaluando candidato con IA... La página se actualizará en 3 segundos</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onSuccess} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading || !file}>
+        <Button type="submit" disabled={isLoading || isProcessing || !file}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Procesar CV
+          {isProcessing ? "Evaluando..." : "Procesar CV"}
         </Button>
       </div>
     </form>

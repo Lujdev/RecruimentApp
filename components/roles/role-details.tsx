@@ -41,7 +41,7 @@ export function RoleDetails({ roleId }: RoleDetailsProps) {
       setIsLoading(true)
       const response = await apiClient.getRole(roleId)
       
-      if (response.success) {
+      if (response.success && response.data?.role) {
         // Transform API response to match component interface
         const roleData = response.data.role
         const transformedRole: Role = {

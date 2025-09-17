@@ -17,6 +17,7 @@ interface Role {
   department?: string
   employmentType?: string
   location?: string
+  salary?: string
 }
 
 export default function RolesPageClient() {
